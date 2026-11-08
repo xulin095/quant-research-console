@@ -1,0 +1,19 @@
+# 生成物不进版本库（否则每次 diff 都在看几百行数据）
+data_cache/*
+!data_cache/.gitkeep
+reports/*
+!reports/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+
+# 编辑器
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
