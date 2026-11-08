@@ -1,3 +1,9 @@
+> **Note (English):** The measurement log. Body in Chinese.
+>
+> **What it is:** the four approaches that were tested and **why each one failed**, with the actual
+> numbers (walk-forward, deflated Sharpe, rank IC, Bonferroni-adjusted p-values, holdout results).
+> If you think one of these actually has an edge, this is the document to argue against — write a
+> card and run it rather than asserting it.
 # v2 路线图：从「量具」到「能给出客观结论的系统」
 
 > 结论先行：**当前 v1 不能作为真实市场的量化建议后端。**

@@ -1,3 +1,11 @@
+> **Note (English):** This document is the *research record* — market context, sources, and what was
+> actually verified. The body is kept in the original Chinese; this abstract is the English summary.
+>
+> **What it is:** 19 cited sources on where edges might exist, plus 4 claims that could **not** be
+> verified and 5 that were only partially verified. The purpose is to stop the project from building
+> on assumptions that were never checked. Net conclusion: the commonly cited "simple" edges
+> (MA crossover, daily reversal, momentum on famous names) do not survive the verification
+> described in `ROADMAP-v2.md`.
 # 量化分析 Agent v1 研究报告（新手版）
 
 **核查日期：2026-11-08（Asia/Shanghai）**

@@ -1,3 +1,10 @@
+> **Note (English):** Operating instructions for the author (how to run everything, and the traps).
+> Body in Chinese.
+>
+> **What it is:** 11 sections covering environment setup, per-market network policy, how to write
+> and freeze a hypothesis card, how to read a verdict, and the recurring mistakes worth remembering
+> (forward-adjusted A-share prices going negative, delisted tickers being unavailable for free,
+> Windows console encoding issues).
 # 操作手册（RUNBOOK）
 
 > 目标：把「一个想法」在两小时内变成「通过 / 不通过」的结论，并留下账。

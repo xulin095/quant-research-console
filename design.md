@@ -1,3 +1,9 @@
+> **Note (English):** Architecture and implementation decisions. Body in Chinese.
+>
+> **What it is:** how the four-stage pipeline is wired, the data contracts between stages,
+> the network policy per market (US/crypto need `QUANT_PROXY`, A-shares need `NO_PROXY=*`),
+> and the numbered design decisions referenced throughout the code. Read this before changing
+> module boundaries.
 # 量化分析 agent v1 —— 设计文档
 
 > 依据：`research.md`（第 1 棒）+ `prompts-v2.md` 附录 A/B/C。

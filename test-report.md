@@ -1,3 +1,9 @@
+> **Note (English):** Quality report produced by the QA stage, including the issues it found in the
+> author's own work. Body in Chinese.
+>
+> **What it is:** a list of concrete defects (with severity), the mechanical checks that caught them,
+> and the residual risks. It is kept in the repo on purpose: shipping the list of your own bugs is
+> cheaper than having users find them.
 # 量化分析 agent v1 质检报告
 
 - 质检对象：`<项目根目录>`
