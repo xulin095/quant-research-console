@@ -67,6 +67,7 @@ S = {
         "row_z": "| 置换 z 值 | {v} | 把日期打乱重来 120 次后，这个 VR 有多罕见（\\|z\\|>2 才算有结构） |",
         "row_vol": "| 年化波动 | {v}% | 价格晃得有多厉害 |",
         "row_dd": "| 最大回撤 | {v}%（{days} 天） | 历史上最难受的时候亏多少 |",
+        "stability_note": "> ⚠ 实测提醒：把历史切成前后两段，前段判出「有结构」的 25 只标的里只有 2 只（8%）在后段保持同一判定。单只票的结构判定描述的是**这一段历史**，不是下一段；它只用来决定先往哪个方向写卡，不能当交易信号。",
         "evidence": "证据：",
         "card_intro": "  可以新建一条这样的检验：",
         "card_warn": "> 注意：这只是「顺着结构该往哪想」，不是说这个方向一定有效。必须跑一次检验，看它能不能过 95% 那道坎。",
@@ -119,6 +120,7 @@ S = {
         "row_z": "| Permutation z | {v} | how rare this VR is when the date order is shuffled 120 times (\\|z\\| > 2 counts as structure) |",
         "row_vol": "| Annualised volatility | {v}% | how violently the price moves |",
         "row_dd": "| Maximum drawdown | {v}% ({days} days) | the worst peak-to-trough loss on record |",
+        "stability_note": "> ⚠ Measured caveat: splitting history in two, only 2 of 25 tickers (8%) that showed a structure in the first half kept the same verdict in the second half. A single-ticker verdict describes *that* period, not the next one; use it to decide which direction to write a card for, never as a trading signal.",
         "evidence": "Evidence:",
         "card_intro": "  You could write a test like this:",
         "card_warn": "> Note: this is only 'which way to think given the structure', not a claim that the direction works. Run a test and see whether it clears the 95% bar.",
@@ -251,6 +253,8 @@ def build_report(rows, symbol, market, cache_name="", lang="zh"):
             bullets = prof["evidence_en"]
         for w in bullets:
             L.append(f"- {w}")
+        L.append("")
+        L.append(T["stability_note"])
     else:
         L.append(prof.get("reason", ""))
     L.append("")

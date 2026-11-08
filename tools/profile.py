@@ -113,6 +113,11 @@ def profile(rows):
     closes = [r["close"] for r in rows]
     # 脏数据防护：价格为 0 或负时不能算收益率（会除零），负价还会让年化收益变成复数。
     bad_prices = sum(1 for c in closes if c <= 0)
+    if bad_prices:
+        # 不修补、不忽略：非正价格说明复权口径坏了，算出来的结构是假的
+        return {"ok": False, "bad_prices": bad_prices,
+                "reason": f"有 {bad_prices} 个价格非正（复权口径可能有问题），拒绝画像",
+                "reason_en": f"{bad_prices} non-positive prices (broken price adjustment); refusing to profile"}
     rets = [closes[i] / closes[i - 1] - 1
             for i in range(1, len(closes))
             if closes[i - 1] > 0 and closes[i] > 0]

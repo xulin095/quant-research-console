@@ -113,8 +113,12 @@ class TestJsonSafe(unittest.TestCase):
         prices = [-10.0 + i for i in range(300)]              # 首价为负
         rows = [{"date": "D%04d" % i, "open": p, "close": p} for i, p in enumerate(prices)]
         r = prof(rows)
-        self.assertTrue(r["ok"])
-        self.assertIsNone(r["annual_return"], "负首价下年化收益必须为 None，不能是复数")
+        # 新契约：非正价格直接拒绝画像（旧行为是忽略脏行继续算，等于在坏数据上静默出结论）
+        self.assertFalse(r["ok"], "非正价格应该拒绝画像")
+        self.assertIn("非正", r["reason"])
+        self.assertIn("reason_en", r, "英文报告需要英文原因")
+        import json
+        json.dumps(r, ensure_ascii=False)   # 任何情况下都要能 JSON 序列化（不能有复数）
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
