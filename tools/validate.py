@@ -61,14 +61,15 @@ def read_csv(path):
     return rows
 
 
-def find_cached(csv_dir, symbol):
+def find_cached(csv_dir, symbol, market=None):
     """按 v1 的命名规约找缓存：data_cache/{market}_{symbol}_{start}_{end}.csv
 
     同一标的可能有多个区间缓存（短区间 + 长历史）。取**行数最多**的那份：
     原来按字母序取第一个，结果好坏取决于文件名，属于隐性陷阱。
     """
     d = Path(csv_dir)
-    hits = sorted(p for p in d.glob(f"*_{symbol}_*.csv"))
+    pat = f"{market}_{symbol}_*.csv" if market else f"*_{symbol}_*.csv"
+    hits = sorted(d.glob(pat))
     if not hits:
         return None
     best, best_rows = None, -1

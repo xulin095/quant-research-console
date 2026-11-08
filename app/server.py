@@ -644,13 +644,21 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/reports":
             return self._send(200, json.dumps({"files": list_reports()}, ensure_ascii=False))
         if path == "/api/profile":
+            mk = (parse_qs(u.query).get("market") or [""])[0].strip().lower() or None
             sym = (parse_qs(u.query).get("symbol") or [""])[0].strip().upper()
             if not sym:
                 return self._send(400, json.dumps({"error": "缺少 symbol"}, ensure_ascii=False))
             try:
                 from tools.profile import profile as _prof
                 from tools.validate import find_cached, read_csv
-                p = find_cached(ROOT / "data_cache", sym)
+                p = find_cached(ROOT / "data_cache", sym, mk)
+                if p is None and mk:
+                    alt = find_cached(ROOT / "data_cache", sym)
+                    if alt is not None:
+                        owner = alt.name.split("_")[0]
+                        return self._send(404, json.dumps(
+                            {"error": f"{sym} 的数据属于 {owner} 市场，不是 {mk}。请把市场改成 {owner}。"},
+                            ensure_ascii=False))
                 if p is None:
                     return self._send(404, json.dumps(
                         {"error": f"数据里没有 {sym}，先上传或拉取"}, ensure_ascii=False))
@@ -694,7 +702,15 @@ class Handler(BaseHTTPRequestHandler):
                     from datetime import date as _date
                     from tools.stock_report import build_report
                     from tools.validate import find_cached, read_csv
-                    path_ = find_cached(ROOT / "data_cache", sym)
+                    mk2 = (payload.get("market") or "").strip().lower() or None
+                    path_ = find_cached(ROOT / "data_cache", sym, mk2)
+                    if path_ is None and mk2:
+                        alt2 = find_cached(ROOT / "data_cache", sym)
+                        if alt2 is not None:
+                            owner2 = alt2.name.split("_")[0]
+                            return self._send(404, json.dumps(
+                                {"error": f"{sym} 的数据属于 {owner2} 市场，不是 {mk2}。请把市场改成 {owner2}。"},
+                                ensure_ascii=False))
                     if path_ is None:
                         return self._send(404, json.dumps(
                             {"error": f"数据里没有 {sym}，先拉取或上传"}, ensure_ascii=False))
