@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import sys
 
 import pandas as pd
 import requests
@@ -45,4 +46,5 @@ if __name__ == "__main__":
     try:
         print(CryptoFetcher().get_history("BTCUSDT", "2024-01-01", "2025-12-31").head())
     except DataError as error:
-        print(error)
+        print(error, file=sys.stderr)
+        raise SystemExit(1)

@@ -1,5 +1,6 @@
 import akshare as ak
 import pandas as pd
+import sys
 
 from data.base import DataError, DataFetcher
 
@@ -28,4 +29,5 @@ if __name__ == "__main__":
     try:
         print(CNFetcher().get_history("600519", "2024-01-01", "2025-12-31").head())
     except DataError as error:
-        print(error)
+        print(error, file=sys.stderr)
+        raise SystemExit(1)
