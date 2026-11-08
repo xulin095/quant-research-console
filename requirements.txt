@@ -1,5 +1,8 @@
-pandas
-numpy
-yfinance
-akshare
-requests
+# 核心（跑测试只需要这两个）
+pandas>=2.0,<3
+numpy>=1.24,<3
+
+# 数据源（只在真去拉数据时需要；函数内延迟导入，装不上也能跑测试）
+yfinance>=0.2.40
+akshare>=1.12
+requests>=2.28
