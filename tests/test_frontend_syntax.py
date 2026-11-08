@@ -65,5 +65,23 @@ class TestFrontendSyntax(unittest.TestCase):
         self.assertNotIn("glossify(out.join('\\n');", self.html)
 
 
+    def test_report_pipeline_functions_exist(self):
+        """报告能生成、能渲染、能下载，三个函数缺一个就白屏/没反应。
+
+        这是真实事故：重写报告页时把 md2html 一起删了，
+        结果报告生成成功但页面什么都不显示（JS 报 ReferenceError）。
+        """
+        for fn in ("function md2html", "function genReport",
+                   "function loadReportList", "function glossify"):
+            self.assertIn(fn, self.html, f"缺少前端函数：{fn}")
+        for el_id in ('id="r-body"', 'id="btnDownloadMd"', 'id="btnCopyMd"'):
+            self.assertIn(el_id, self.html, f"缺少元素：{el_id}")
+
+    def test_generated_content_is_actually_rendered(self):
+        """genReport 必须调用 md2html，否则下载有内容、页面空白。"""
+        seg = self.html[self.html.find("function genReport"):]
+        seg = seg[:seg.find("\n}") + 2]
+        self.assertIn("md2html", seg, "genReport 没有调用渲染函数")
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

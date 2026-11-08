@@ -237,6 +237,7 @@ select.w{width:auto;min-width:220px}
         <span class="badge pass" id="r-badge">已生成</span>
         <span class="muted mono" id="r-path"></span>
         <button class="ghost" id="btnCopyMd">复制 Markdown</button>
+        <button class="ghost" id="btnDownloadMd">下载 .md 文件</button>
       </div>
       <div class="md" id="r-body"></div>
     </div>
@@ -571,6 +572,62 @@ function loadTools(){
   });
 }
 
+/* 极简 markdown：标题/表格/列表/引用/代码/粗体/行内代码 */
+function md2html(src){
+  var lines=src.split(/\r?\n/), out=[], i=0, inCode=false, tbl=[];
+  function inline(s){
+    s=esc(s);
+    s=s.replace(/`([^`]+)`/g,'<code>$1</code>');
+    s=s.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
+    s=s.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" style="color:var(--acc)">$1</a>');
+    return s;
+  }
+  function flushTable(){
+    if(!tbl.length)return;
+    var rows=tbl.filter(function(r){return !/^\|[\s:\-|]+\|$/.test(r.trim());});
+    var html='<table>';
+    rows.forEach(function(r,idx){
+      var cells=r.trim().replace(/^\||\|$/g,'').split('|');
+      html+='<tr>'+cells.map(function(c){
+        return (idx===0?'<th>':'<td>')+inline(c.trim())+(idx===0?'</th>':'</td>');
+      }).join('')+'</tr>';
+    });
+    html+='</table>';out.push(html);tbl=[];
+  }
+  while(i<lines.length){
+    var L=lines[i];
+    if(/^```/.test(L)){
+      if(inCode){out.push('</code></pre>');inCode=false;}
+      else{flushTable();out.push('<pre><code>');inCode=true;}
+      i++;continue;
+    }
+    if(inCode){out.push(esc(L));i++;continue;}
+    if(/^\s*\|.*\|\s*$/.test(L)){tbl.push(L);i++;continue;}
+    flushTable();
+    if(/^\s*$/.test(L)){i++;continue;}
+    if(/^#{1,4}\s/.test(L)){
+      var lv=Math.min(4,(L.match(/^#+/)||['#'])[0].length);
+      out.push('<h'+lv+'>'+inline(L.replace(/^#+\s*/,''))+'</h'+lv+'>');
+    } else if(/^>\s?/.test(L)){
+      out.push('<blockquote>'+inline(L.replace(/^>\s?/,''))+'</blockquote>');
+    } else if(/^\s*[-*]\s+/.test(L)){
+      out.push('<div style="padding-left:18px;position:relative"><span style="position:absolute;'+
+        'left:4px;color:var(--dim2)">•</span>'+inline(L.replace(/^\s*[-*]\s+/,''))+'</div>');
+    } else if(/^\s*\d+\.\s+/.test(L)){
+      out.push('<div style="padding-left:18px">'+inline(L)+'</div>');
+    } else if(/^---+$/.test(L.trim())){
+      out.push('<hr>');
+    } else {
+      out.push('<p style="margin:8px 0">'+inline(L)+'</p>');
+    }
+    i++;
+  }
+  flushTable();
+  if(inCode)out.push('</code></pre>');
+  return glossify(out.join('\n'));
+}
+
+
 /* ---------- 分析报告 ---------- */
 function genReport(){
   var sym = el('r-symbol').value.trim().toUpperCase();
@@ -587,10 +644,23 @@ function genReport(){
     el('r-body').innerHTML = md2html(r.markdown);
     el('r-body').dataset.name = '';
     window.__lastMd = r.markdown;
+    window.__lastName = r.path.split(/[\\\\/]/).pop();
     loadReportList();
   });
 }
 el('btnReport').onclick = genReport;
+el('btnDownloadMd').onclick = function(){
+  var md = window.__lastMd;
+  if(!md){ el('r-hint').textContent = '还没有可下载的报告'; return; }
+  var name = window.__lastName || ('分析报告_' + new Date().toISOString().slice(0,10) + '.md');
+  var blob = new Blob([md], {type:'text/markdown;charset=utf-8'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  el('r-hint').textContent = '已下载：' + name;
+};
 el('btnCopyMd').onclick = function(){
   if(!window.__lastMd) return;
   navigator.clipboard.writeText(window.__lastMd).then(function(){
@@ -619,6 +689,7 @@ function loadReportList(){
           el('r-path').textContent = 'reports/' + a.dataset.f;
           el('r-body').innerHTML = md2html(r.content);
           window.__lastMd = r.content;
+          window.__lastName = a.dataset.f;
         });
       };
     });
