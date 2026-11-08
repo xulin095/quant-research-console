@@ -740,7 +740,7 @@ class Handler(BaseHTTPRequestHandler):
                 sym = normalize_symbol(raw, (payload.get("market") or "").lower()) or raw
                 try:
                     from datetime import date as _date
-                    from tools.stock_report import build_report
+                    from tools.stock_report import build_report, report_filename
                     from tools.validate import find_cached, read_csv
                     mk2 = (payload.get("market") or "").strip().lower() or None
                     path_ = find_cached(ROOT / "data_cache", sym, mk2)
@@ -756,8 +756,10 @@ class Handler(BaseHTTPRequestHandler):
                             {"error": f"数据里没有 {sym}，先拉取或上传"}, ensure_ascii=False))
                     rows = read_csv(path_)
                     market = path_.name.split("_")[0]
-                    md = build_report(rows, sym, market, path_.name)
-                    out = ROOT / "reports" / f"{sym}_分析报告_{_date.today().isoformat()}.md"
+                    lg = (payload.get("lang") or "zh").lower()
+                    lg = "en" if lg.startswith("en") else "zh"
+                    md = build_report(rows, sym, market, path_.name, lang=lg)
+                    out = ROOT / "reports" / report_filename(sym, lg)
                     out.parent.mkdir(parents=True, exist_ok=True)
                     out.write_text(md, encoding="utf-8")
                     return self._send(200, json.dumps(

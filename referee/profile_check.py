@@ -29,6 +29,23 @@ import re
 import sys
 from pathlib import Path
 
+VERDICT_CODE = {
+    "趋势型": "trend", "Trending": "trend",
+    "均值回归型": "revert", "Mean-reverting": "revert",
+    "无明显结构": "none", "No clear structure": "none",
+}
+
+
+def canon_verdict(text):
+    """把中英文的判定说法归一到 trend / revert / none / None。"""
+    if not text:
+        return None
+    t = text.strip()
+    for k, v in VERDICT_CODE.items():
+        if t.startswith(k):
+            return v
+    return t
+
 SEED = 20261108       # 刻意与主程序不同，避免「同一个种子同一个错」
 BOOT = 200
 
@@ -127,9 +144,10 @@ def main(argv=None):
         m = re.search(r"\|\s*" + label + r"\s*\|\s*([-\d.]+)", text)
         return float(m.group(1)) if m else None
 
-    rep_ac = grab("lag1 自相关")
+    rep_ac = grab("lag1 自相关") or grab("lag1 autocorrelation")
     rep_vr = grab("VR20")
-    m = re.search(r"\*\*判定：([^*]+)\*\*", text)
+    m = (re.search(r"\*\*判定：([^*]+)\*\*", text)
+         or re.search(r"\*\*Verdict: ([^*]+)\*\*", text))
     rep_verdict = m.group(1).strip() if m else None
 
     print("\n与报告对账：")
@@ -145,7 +163,7 @@ def main(argv=None):
         print(f"  {name}: 报告 {theirs:+.4f} / 复算 {mine:+.4f}  差 {diff:.4f}  "
               f"{'✓' if good else '✗ 超出容差'}")
     if rep_verdict:
-        good = rep_verdict == verdict
+        good = canon_verdict(rep_verdict) == canon_verdict(verdict)
         ok &= good
         print(f"  结构判定: 报告「{rep_verdict}」/ 复算「{verdict}」  {'✓' if good else '✗ 不一致'}")
     else:

@@ -176,6 +176,15 @@ def profile(rows):
     else:
         why.append(f"VR20 {vr20}（样本不足，无法给 z 值）")
 
+    why_en = []
+    if ac1 is not None:
+        rel_en = "significant" if (ac_thr and abs(ac1) > ac_thr) else "not significant"
+        why_en.append(f"lag1 autocorrelation {ac1:+.3f} (2-sigma threshold {ac_thr:.3f}, {rel_en})")
+    if vr20_z is not None:
+        why_en.append(f"VR20 {vr20}, permutation z = {vr20_z:+.2f} (only |z|>2 counts as structure)")
+    else:
+        why_en.append(f"VR20 {vr20} (not enough rows for a z-score)")
+
     ac_sig_up = ac_thr is not None and ac1 is not None and ac1 > ac_thr
     ac_sig_dn = ac_thr is not None and ac1 is not None and ac1 < -ac_thr
     vr_sig_up = vr20_z is not None and vr20_z > 2
@@ -233,7 +242,11 @@ def profile(rows):
         "vr20_z": vr20_z, "ac_threshold": clean(ac_thr),
         "bad_prices": bad_prices,
         "structure": struct, "hint": hint, "allowed_directions": allowed_dirs,
-        "evidence": why,
+        "evidence": why, "evidence_en": why_en,
+        "caveat_en": (f"A historical description of {len(rows)} trading days from "
+                      f"{rows[0]['date']} to {rows[-1]['date']}, not a forecast. A different "
+                      f"sample could give a completely different answer; any direction still "
+                      f"has to pass a card audit before it means anything."),
         "caveat": (f"这是 {rows[0]['date']} 至 {rows[-1]['date']} 共 {len(rows)} 个交易日的"
                    f"**历史描述**，不是预测。换一段样本结论可能完全不同；"
                    f"任何方向都必须先过 HK 卡的审计才能当依据。"),
