@@ -103,6 +103,20 @@ pre{background:#0a0d11;border:1px solid var(--line);border-radius:8px;padding:13
 .md blockquote{border-left:3px solid var(--acc);margin:12px 0;padding:6px 14px;
  color:var(--dim);background:rgba(91,157,255,.05)}
 .md hr{border:none;border-top:1px solid var(--line);margin:20px 0}
+.gloss{color:var(--acc);border-bottom:1px dashed rgba(91,157,255,.55);cursor:help;
+ text-decoration:none;padding-bottom:1px}
+.gloss:hover{background:rgba(91,157,255,.12);border-radius:3px}
+.tip{position:fixed;z-index:99;max-width:340px;background:#1b212a;border:1px solid var(--acc);
+ border-radius:10px;padding:14px 16px;box-shadow:0 12px 32px rgba(0,0,0,.55);display:none}
+.tip h4{margin:0 0 8px;font-size:14px;color:var(--acc)}
+.tip p{margin:0 0 8px;font-size:13px;line-height:1.75}
+.tip .ana{color:var(--dim);font-size:12.5px;line-height:1.7}
+.termcard{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:15px 17px}
+.termcard h4{margin:0 0 8px;font-size:15px;color:var(--fg)}
+.termcard p{margin:0 0 8px;font-size:13px;line-height:1.75}
+.termcard .ana{color:var(--dim);font-size:12.5px}
+.termcard .why{color:var(--dim2);font-size:12px;margin-top:8px;padding-top:8px;
+ border-top:1px solid var(--line)}
 .loading{color:var(--dim2);font-size:13px}
 .flex{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 select.w{width:auto;min-width:220px}
@@ -213,6 +227,19 @@ select.w{width:auto;min-width:220px}
     <div class="box"><div class="md" id="mdBody"><span class="loading">选择一份报告…</span></div></div>
   </section>
 
+<section class="view" id="v-glossary">
+    <h2 class="page">术语白话库</h2>
+    <p class="sub">看懂这份报告需要的词，全在这儿。页面和报告里的蓝色虚线下划线都可以点。</p>
+    <div class="box">
+      <div class="flex">
+        <input id="g-q" placeholder="搜术语，或搜你想问的话（比如「回撤」「凭运气」「为什么样本外重要」）"
+               style="max-width:520px">
+        <span class="hint" style="margin:0" id="g-count"></span>
+      </div>
+    </div>
+    <div class="grid g2" id="g-list" style="margin-top:14px"></div>
+  </section>
+
   <section class="view" id="v-data">
     <h2 class="page">数据</h2>
     <p class="sub">本地缓存与诚实宇宙。覆盖率＝拿到的样本 / 申请的样本，缺口就是残余偏差。</p>
@@ -261,11 +288,12 @@ select.w{width:auto;min-width:220px}
   </section>
 
 </main>
+<div id="tip" class="tip"></div>
 <script>
 var VIEWS = [
   ["overview","概览"],["pipeline","四棒流水线"],["paths","路径结果"],
   ["cards","假设卡"],["ledger","账本"],["tools","工具链"],
-  ["reports","报告"],["data","数据"]
+  ["glossary","术语"],["reports","报告"],["data","数据"]
 ];
 var S = {cards:[], results:null};
 
@@ -303,6 +331,7 @@ function show(v){
   if(v==='tools') loadTools();
   if(v==='cards') loadCards();
   if(v==='reports' && !el('mdPick').dataset.init) initReports();
+  if(v==='glossary') loadGlossary();
 }
 
 /* ---------- 概览 ---------- */
@@ -518,6 +547,7 @@ function initReports(){
   loadMd(list[0]);
 }
 function loadMd(name){
+  if(el('mdBody')) el('mdBody').dataset.name = name;
   el('mdBody').innerHTML='<span class="loading">读取中…</span>';
   api('/api/md?name='+encodeURIComponent(name)).then(function(r){
     if(r.error){el('mdBody').innerHTML='<span class="badge err">'+esc(r.error)+'</span>';return;}
@@ -577,7 +607,7 @@ function md2html(src){
   }
   flushTable();
   if(inCode)out.push('</code></pre>');
-  return out.join('\n');
+  return glossify(out.join('\n');
 }
 
 /* ---------- 数据 ---------- */
@@ -719,7 +749,81 @@ function uploadData(){
 }
 el('btnUpload').onclick=uploadData;
 el('btnSave').onclick=saveCard;
+/* ==================== 术语白话库 ==================== */
+var GL = {list: [], map: {}, re: null, loaded: false};
+
+function buildGlossIndex(list){
+  GL.list = list; GL.map = {};
+  list.forEach(function(e){ GL.map[e.term] = e; });
+  var terms = list.map(function(e){return e.term;})
+    .sort(function(a,b){return b.length - a.length;});
+  if (terms.length){
+    var escd = terms.map(function(t){
+      return t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); });
+    GL.re = new RegExp('(' + escd.join('|') + ')', 'g');
+  }
+}
+
+/* 把已有 HTML 里的术语包成可点的链接，跳过代码块、链接、标题内部 */
+function glossify(html){
+  if (!GL.re) return html;
+  return html.split(/(<code[\s\S]*?<\/code>|<a [^>]*>[\s\S]*?<\/a>)/).map(function(seg, i){
+    if (i % 2) return seg;
+    return seg.replace(GL.re, function(m){
+      return '<a class="gloss" href="#" data-t="' + m + '">' + m + '</a>';
+    });
+  }).join('');
+}
+
+function showTip(term, x, y){
+  var e = GL.map[term];
+  if (!e) return;
+  var t = el('tip');
+  t.innerHTML = '<h4>' + esc(e.term) + '</h4><p>' + esc(e.plain) + '</p>' +
+    (e.analogy ? '<div class="ana">打个比方：' + esc(e.analogy) + '</div>' : '');
+  t.style.display = 'block';
+  var w = t.offsetWidth, h = t.offsetHeight;
+  var left = Math.min(x + 14, window.innerWidth - w - 16);
+  var top = Math.min(y + 14, window.innerHeight - h - 16);
+  t.style.left = Math.max(10, left) + 'px';
+  t.style.top = Math.max(10, top) + 'px';
+}
+
+document.addEventListener('click', function(ev){
+  var a = ev.target.closest ? ev.target.closest('a.gloss') : null;
+  if (a){ ev.preventDefault(); showTip(a.dataset.t, ev.clientX, ev.clientY); return; }
+  if (!(ev.target.closest && ev.target.closest('#tip'))) el('tip').style.display = 'none';
+});
+
+function renderGlossary(q){
+  q = (q || '').trim().toLowerCase();
+  var list = GL.list.filter(function(e){
+    if (!q) return true;
+    var hay = (e.term + ' ' + e.plain + ' ' + (e.analogy || '') + ' ' + (e.why || '')).toLowerCase();
+    return hay.indexOf(q) >= 0;
+  });
+  el('g-count').textContent = '共 ' + list.length + ' 条';
+  el('g-list').innerHTML = list.map(function(e){
+    return '<div class="termcard"><h4>' + esc(e.term) + '</h4><p>' + esc(e.plain) + '</p>' +
+      (e.analogy ? '<div class="ana">打个比方：' + esc(e.analogy) + '</div>' : '') +
+      (e.why ? '<div class="why">在这个项目里：' + esc(e.why) + '</div>' : '') + '</div>';
+  }).join('') || '<span class="hint">没找到，换个说法试试。</span>';
+}
+
+function loadGlossary(){
+  if (GL.loaded) { renderGlossary(el('g-q') ? el('g-q').value : ''); return Promise.resolve(GL.list); }
+  return api('/api/glossary').then(function(g){
+    buildGlossIndex(g.entries || []);
+    GL.loaded = true;
+    renderGlossary('');
+    var cur = el('mdBody') && el('mdBody').dataset.name;
+    if (cur) loadMd(cur);
+    return GL.list;
+  });
+}
+if (el('g-q')) el('g-q').oninput = function(){ renderGlossary(this.value); };
 loadOverview();loadPipeline();loadPaths();loadCards();
+loadGlossary();
 </script>
 </body>
 </html>

@@ -19,7 +19,7 @@ r"""量化研究台 —— 后端 API（标准库，零依赖）。
     GET  /api/registry         账本
     GET  /api/status           数据状态
     GET  /api/cache            缓存文件清单
-    GET  /api/profile?symbol=X 单标的结构画像（描述统计）\n    GET  /api/profile_all     批量结构画像（120 秒缓存）\n    GET  /api/md?name=xxx.md   读取报告原文（白名单）
+    GET  /api/profile?symbol=X 单标的结构画像（描述统计）\n    GET  /api/profile_all     批量结构画像（120 秒缓存）\n    GET  /api/glossary        术语白话库\n    GET  /api/md?name=xxx.md   读取报告原文（白名单）
     POST /api/upload           上传自备 CSV（校验并落成标准表）\n    POST /api/run {id}         跑卡
     GET  /api/job/{job}        轮询任务
 
@@ -366,6 +366,9 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/", "/index.html"):
             f = STATIC / "index.html"
             return self._send(200, f.read_text(encoding="utf-8"), "text/html; charset=utf-8")
+        if path == "/api/glossary":
+            g = read_json(ROOT / "glossary.json", {}) or {}
+            return self._send(200, json.dumps(g, ensure_ascii=False))
         if path == "/api/profile_all":
             now = time.time()
             if _PALL["t"] and now - _PALL["t"] < 120:
