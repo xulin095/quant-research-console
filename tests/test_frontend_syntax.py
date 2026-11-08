@@ -51,9 +51,14 @@ class TestFrontendSyntax(unittest.TestCase):
                              "前端 JS 语法错误：\n" + (r.stderr or r.stdout)[:800])
 
     def test_key_views_present(self):
-        for vid in ("v-overview", "v-paths", "v-cards", "v-ledger",
-                    "v-tools", "v-reports", "v-data", "v-glossary"):
+        for vid in ("v-overview", "v-data", "v-reports", "v-paths",
+                    "v-cards", "v-ledger", "v-glossary"):
             self.assertIn('id="' + vid + '"', self.html, f"缺少视图 {vid}")
+
+    def test_internal_views_removed(self):
+        """「四棒流水线」「工具链」是开发过程的内部逻辑，不该出现在用户界面里。"""
+        for gone in ("四棒流水线", "工具链", 'id="v-pipeline"', 'id="v-tools"'):
+            self.assertNotIn(gone, self.html, f"不应再展示：{gone}")
 
     def test_balanced_parens_heuristic(self):
         """粗检查：glossify 调用必须有闭合括号（这就是上次白屏的原因）。"""
