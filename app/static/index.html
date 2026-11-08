@@ -146,30 +146,6 @@ select.w{width:auto;min-width:220px}
     <p class="sub">研究员 → 架构师 → 开发者 → 质检员。每棒的产物都是真实文件，体量为实测。</p>
     <div class="grid g2" id="plRoles"></div>
     <div class="box" style="margin-top:14px">
-      <h3>① 按代码拉数据（不用自己找文件）</h3>
-      <div class="grid g3">
-        <div><label>市场</label><select id="f-market">
-          <option value="us">us 美股（需要代理）</option>
-          <option value="cn">cn A 股（直连）</option>
-          <option value="crypto">crypto 加密（需要代理）</option></select></div>
-        <div><label>代码</label><input id="f-symbol" placeholder="例如 AAPL / 600519 / BTCUSDT"></div>
-        <div><label>起止日期</label>
-          <div class="flex"><input id="f-start" value="2010-01-01" style="max-width:130px">
-          <span class="muted">→</span>
-          <input id="f-end" value="2025-12-31" style="max-width:130px"></div></div>
-      </div>
-      <label>代理（只在美股/加密时需要；本机默认 127.0.0.1:7897）</label>
-      <input id="f-proxy" value="http://127.0.0.1:7897" style="max-width:320px">
-      <div style="margin-top:14px"><button class="act" id="btnFetch">拉取数据</button>
-        <span class="hint" style="margin-left:10px" id="fetchHint">拉完会自动做结构画像</span></div>
-      <div id="fetchResult" style="margin-top:12px"></div>
-      <div class="hint">
-        美股：yfinance 直连会被限流，必须走代理；A 股：akshare 直连，但要求绕过系统代理（代码已处理）。
-        加密：本机被墙，大概率失败。已退市的票免费数据拿不到 —— 这是幸存者偏差的来源。
-      </div>
-    </div>
-
-    <div class="box" style="margin-top:14px">
 
       <h3>为什么这样分工</h3>
       <div class="hint" style="font-size:13px;color:var(--dim)">
@@ -231,7 +207,7 @@ select.w{width:auto;min-width:220px}
 
   <section class="view" id="v-ledger">
     <h2 class="page">账本</h2>
-    <p class="sub">追加式。失败的也记 —— 因为「试过几次」是判断显著性的前提。</p>
+    <p class="sub">每试一次就记一笔，失败的也记。因为「我到底试过几次」决定了：这一次的好看，是真本事还是碰巧。</p>
     <div class="box"><h3>检验记录</h3><table id="ledgerTable"></table>
       <div class="hint" id="ledgerHint"></div></div>
   </section>
@@ -267,14 +243,37 @@ select.w{width:auto;min-width:220px}
 
   <section class="view" id="v-data">
     <h2 class="page">数据</h2>
-    <p class="sub">本地缓存与诚实宇宙。覆盖率＝拿到的样本 / 申请的样本，缺口就是残余偏差。</p>
+    <p class="sub">数据够不够用，一眼能看出来。覆盖率＝申请 100 只、实际拿到几只 —— 缺口就是还没看清的那部分。</p>
     <div class="grid g4" id="dataStats"></div>
     <div class="box" style="margin-top:14px">
-      <h3>结构画像（描述统计，不是预测）</h3>
+      <h3>① 按代码拉数据（不用自己找文件）</h3>
+      <div class="grid g3">
+        <div><label>市场</label><select id="f-market">
+          <option value="us">us 美股（需要代理）</option>
+          <option value="cn">cn A 股（直连）</option>
+          <option value="crypto">crypto 加密（需要代理）</option></select></div>
+        <div><label>代码</label><input id="f-symbol" placeholder="例如 AAPL / 600519 / BTCUSDT"></div>
+        <div><label>起止日期</label>
+          <div class="flex"><input id="f-start" value="2010-01-01" style="max-width:130px">
+          <span class="muted">→</span>
+          <input id="f-end" value="2025-12-31" style="max-width:130px"></div></div>
+      </div>
+      <label>代理（只在美股/加密时需要；本机默认 127.0.0.1:7897）</label>
+      <input id="f-proxy" value="http://127.0.0.1:7897" style="max-width:320px">
+      <div style="margin-top:14px"><button class="act" id="btnFetch">拉取数据</button>
+        <span class="hint" style="margin-left:10px" id="fetchHint">拉完会自动做结构画像</span></div>
+      <div id="fetchResult" style="margin-top:12px"></div>
+      <div class="hint">
+        美股：yfinance 直连会被限流，必须走代理；A 股：akshare 直连，但要求绕过系统代理（代码已处理）。
+        加密：本机被墙，大概率失败。已退市的票免费数据拿不到 —— 这是幸存者偏差的来源。
+      </div>
+    </div>
+    <div class="box" style="margin-top:14px">
+      <h3>这只票以前是「顺着走」还是「来回摆」？</h3>
       <div class="flex">
         <input id="p-symbol" placeholder="输入代码，如 AAPL / 600519" style="max-width:280px">
         <button class="act" id="btnProfile">分析结构</button>
-        <span class="hint" style="margin:0">看这只票历史上更像趋势型还是均值回归型</span>
+        <span class="hint" style="margin:0">只看历史，不猜未来。结果告诉你该往哪个方向想假设。</span>
       </div>
       <div id="profResult" style="margin-top:14px"></div>
       <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">
@@ -380,7 +379,12 @@ function loadOverview(){
       return '<div class="box stat"><div class="k">'+s[0]+'</div><div class="v">'+
         esc(s[1])+'</div><div class="n">'+esc(s[2])+'</div></div>';
     }).join('');
-    el('ovConclusion').innerHTML = esc(d.conclusion||'');
+    el('ovConclusion').innerHTML = esc(d.conclusion||'') +
+      '<div style="margin-top:14px;padding:12px 14px;background:var(--panel2);border-radius:8px;line-height:1.85">'+
+      '<b style="color:var(--fg)">我们怎么算「通过」？</b><br>'+
+      '不比「有没有赚钱」，比「跟<b>买了就放着不动</b>相比，多赚的那部分有多大概率不是运气」。<br>'+
+      '这个概率要过 95% 才算数。过不了，就老实说「不知道」—— 这是这套系统唯一的价值：<b>它不会替你编一个答案</b>。'+
+      '</div>';
     el('sideFoot').innerHTML = '路径 '+d.paths_passed+'/'+d.paths_tested+
       ' 通过<br>账本 '+d.registry.total+' 次<br>缓存 '+d.data.cache_files+' 个文件';
   });
@@ -414,7 +418,7 @@ function loadPaths(){
   api('/api/results').then(function(r){
     S.results=r;
     el('pathTable').innerHTML =
-      '<thead><tr><th>路径</th><th>阶段</th><th>样本</th><th>证据</th><th>判定</th></tr></thead><tbody>'+
+      '<thead><tr><th>哪条路</th><th>做什么</th><th>用了多少数据</th><th>看到了什么</th><th>结论</th></tr></thead><tbody>'+
       (r.paths||[]).map(function(p){
         return '<tr><td><b>'+esc(p.name)+'</b><div class="hint" style="margin-top:4px">'+
           esc(p.detail)+'<br><span style="color:var(--dim2)">原因：'+esc(p.why)+'</span></div></td>'+
@@ -487,7 +491,7 @@ function loadCards(){
           esc(c.lookback||'—')+'</td><td class="num">'+esc(c.top_n||'—')+'</td>'+
           '<td class="mut" style="max-width:320px">'+esc(c.mechanism||'')+'</td>'+
           '<td><button class="ghost" onclick="runCard(\''+esc(c.id)+'\')">运行</button></td></tr>';
-      }).join('')||'<tr><td colspan="7" class="loading">还没有卡</td></tr>')+'</tbody>';
+      }).join('')||'<tr><td colspan="7" class="loading">还没有假设卡 —— 在下面「新建卡」里写第一张</td></tr>')+'</tbody>';
   });
 }
 function runCard(id){
