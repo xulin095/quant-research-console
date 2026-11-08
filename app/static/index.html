@@ -225,6 +225,13 @@ select.w{width:auto;min-width:220px}
         <span class="hint" style="margin:0">看这只票历史上更像趋势型还是均值回归型</span>
       </div>
       <div id="profResult" style="margin-top:14px"></div>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">
+        <div class="flex">
+          <button class="ghost" id="btnProfileAll">批量画像（全部缓存标的）</button>
+          <span class="hint" style="margin:0" id="pallSum"></span>
+        </div>
+        <div id="pallResult" style="margin-top:12px"></div>
+      </div>
     </div>
     <div class="box" style="margin-top:14px">
       <h3>上传自己的数据</h3>
@@ -626,6 +633,36 @@ function loadProfile(sym){
   });
 }
 el('btnProfile').onclick=function(){loadProfile(el('p-symbol').value.trim());};
+
+function loadProfileAll(){
+  el('pallResult').innerHTML='<span class="loading">扫描缓存中…（106 个文件，约 3–8 秒）</span>';
+  el('pallSum').textContent='';
+  api('/api/profile_all').then(function(r){
+    if(r.error){el('pallResult').innerHTML='<span class="badge err">'+esc(r.error)+'</span>';return;}
+    var s=r.summary||{};
+    el('pallSum').innerHTML='共 <b>'+r.count+'</b> 只：趋势型 <b>'+s['趋势型']+
+      '</b> · 均值回归型 <b>'+s['均值回归型']+'</b> · 无明显结构 <b>'+s['无明显结构']+'</b>';
+    var mixed = (s['趋势型']||0)>0 && (s['均值回归型']||0)>0;
+    el('pallResult').innerHTML =
+      (mixed?'<div class="hint" style="color:var(--warn);margin:0 0 10px">'+
+        '⚠ 结构混杂：做截面研究时建议分开子集，不要把两种结构混在一个排序里</div>':'')+
+      '<table><thead><tr><th>标的</th><th>市场</th><th>年数</th><th>年化</th><th>波动</th>'+
+      '<th>回撤</th><th>lag1</th><th>VR20</th><th>结构</th></tr></thead><tbody>'+
+      r.rows.slice(0,60).map(function(x){
+        var cls=x.structure==='趋势型'?'pass':(x.structure==='均值回归型'?'err':'mut');
+        function p(v,d){return v===null||v===undefined?'—':(v*100).toFixed(d===undefined?1:d)+'%';}
+        function n(v,d){return v===null||v===undefined?'—':v.toFixed(d);}
+        return '<tr><td class="mono">'+esc(x.symbol)+'</td><td class="mut">'+esc(x.market)+
+          '</td><td class="num">'+n(x.years,1)+'</td><td class="num">'+p(x.annual_return)+
+          '</td><td class="num">'+p(x.annual_vol)+'</td><td class="num">'+p(x.max_drawdown)+
+          '</td><td class="num">'+n(x.autocorr1,3)+'</td><td class="num">'+n(x.vr20,2)+
+          '</td><td><span class="badge '+cls+'">'+esc(x.structure)+'</span></td></tr>';
+      }).join('')+'</tbody></table>'+
+      (r.rows.length>60?'<div class="hint">仅显示前 60 只，完整清单见 profiles.json</div>':'');
+  });
+}
+el('btnProfileAll').onclick=loadProfileAll;
+
 /* ---------- 上传 ---------- */
 var pending = null;
 (function initUpload(){

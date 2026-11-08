@@ -19,7 +19,7 @@ r"""量化研究台 —— 后端 API（标准库，零依赖）。
     GET  /api/registry         账本
     GET  /api/status           数据状态
     GET  /api/cache            缓存文件清单
-    GET  /api/profile?symbol=X 单标的结构画像（描述统计）\n    GET  /api/md?name=xxx.md   读取报告原文（白名单）
+    GET  /api/profile?symbol=X 单标的结构画像（描述统计）\n    GET  /api/profile_all     批量结构画像（120 秒缓存）\n    GET  /api/md?name=xxx.md   读取报告原文（白名单）
     POST /api/upload           上传自备 CSV（校验并落成标准表）\n    POST /api/run {id}         跑卡
     GET  /api/job/{job}        轮询任务
 
@@ -45,6 +45,7 @@ HOST, PORT = "127.0.0.1", 8765
 
 REQUIRED = ("id", "kind", "direction", "lookback", "top_n", "mechanism")
 JOBS = {}
+_PALL = {"t": 0.0, "data": None}   # 批量画像结果缓存（120 秒）
 
 # 报告白名单（防止路径穿越）
 ALLOWED_MD = ("research.md", "design.md", "test-report.md", "ROADMAP-v2.md", "RUNBOOK.md", "README.md")
@@ -365,6 +366,18 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/", "/index.html"):
             f = STATIC / "index.html"
             return self._send(200, f.read_text(encoding="utf-8"), "text/html; charset=utf-8")
+        if path == "/api/profile_all":
+            now = time.time()
+            if _PALL["t"] and now - _PALL["t"] < 120:
+                return self._send(200, json.dumps(_PALL["data"], ensure_ascii=False))
+            try:
+                from tools.profile_all import scan
+                rows, summary = scan(ROOT / "data_cache")
+                data = {"summary": summary, "rows": rows, "count": len(rows)}
+                _PALL.update(t=now, data=data)
+                return self._send(200, json.dumps(data, ensure_ascii=False))
+            except (OSError, ValueError, ImportError) as e:
+                return self._send(500, json.dumps({"error": str(e)}, ensure_ascii=False))
         if path == "/api/profile":
             sym = (parse_qs(u.query).get("symbol") or [""])[0].strip().upper()
             if not sym:

@@ -83,24 +83,42 @@ def profile(rows):
         return {"ok": False, "reason": f"只有 {len(rows)} 行，至少需要 {MIN_ROWS} 行"}
 
     closes = [r["close"] for r in rows]
-    rets = [closes[i] / closes[i - 1] - 1 for i in range(1, len(closes))]
+    # 脏数据防护：价格为 0 或负时不能算收益率（会除零），负价还会让年化收益变成复数。
+    bad_prices = sum(1 for c in closes if c <= 0)
+    rets = [closes[i] / closes[i - 1] - 1
+            for i in range(1, len(closes))
+            if closes[i - 1] > 0 and closes[i] > 0]
+    if len(rets) < MIN_ROWS - 1:
+        return {"ok": False,
+                "reason": f"可用收益只有 {len(rets)} 个（原始 {len(closes)} 行，"
+                          f"其中 {bad_prices} 个价格非正），不足以画像"}
     n = len(rets)
     years = n / 252
 
     mu = _mean(rets)
     sd = math.sqrt(_var(rets))
     ann_vol = sd * math.sqrt(252)
-    ann_ret = (closes[-1] / closes[0]) ** (1 / years) - 1 if years > 0 and closes[0] > 0 else None
+    # 年化收益必须防两种病：
+    #   · 首价为 0 → 除零
+    #   · 首末价比值为负（脏数据里出现过负价）→ 负数取分数次幂会返回 complex，
+    #     一路传到 JSON 序列化直接崩（这是批量画像时炸出来的）
+    if years > 0 and closes[0] > 0 and closes[-1] > 0:
+        ann_ret = (closes[-1] / closes[0]) ** (1 / years) - 1
+    else:
+        ann_ret = None
 
-    # 回撤（买入持有）
-    peak, mdd, mdd_days, cur = closes[0], 0.0, 0, 0
+    # 回撤（买入持有）。只在正价格上取峰值 —— 峰值为 0 时除法会炸。
+    peak, mdd, mdd_days, cur = None, 0.0, 0, 0
     for c in closes:
-        if c >= peak:
+        if c <= 0:
+            continue
+        if peak is None or c >= peak:
             peak, cur = c, 0
         else:
             cur += 1
             mdd_days = max(mdd_days, cur)
-        mdd = max(mdd, 1 - c / peak)
+            mdd = max(mdd, 1 - c / peak)
+    mdd = mdd if peak is not None else None
 
     ac1 = autocorr(rets, 1)
     ac1 = ac1 if ac1 is None else round(ac1, 4)
@@ -148,6 +166,27 @@ def profile(rows):
         hint = "两种方向都不占优 —— 与其硬套，不如换一只票或换一类信号再想。"
         allowed_dirs = []
 
+    def clean(x, nd=6):
+        """把 nan / inf / complex 统统变成 None —— 它们没法进 JSON，也没法解释。"""
+        if x is None:
+            return None
+        if isinstance(x, complex):
+            return None
+        try:
+            f = float(x)
+        except (TypeError, ValueError):
+            return None
+        if f != f or f in (float("inf"), float("-inf")):
+            return None
+        return round(f, nd)
+
+    ann_ret = clean(ann_ret)
+    ann_vol = clean(ann_vol)
+    mdd = clean(mdd)
+    worst = clean(worst)
+    mu = clean(mu, 8)
+    sd = clean(sd, 8)
+    big = clean(big)
     return {
         "ok": True,
         "rows": len(rows), "ret_days": n, "years": round(years, 2),
@@ -157,6 +196,7 @@ def profile(rows):
         "max_drawdown": mdd, "max_dd_days": mdd_days,
         "worst_day": worst, "tail_ratio": big,
         "autocorr1": ac1, "autocorr5": ac5, "vr5": vr5, "vr20": vr20,
+        "bad_prices": bad_prices,
         "structure": struct, "hint": hint, "allowed_directions": allowed_dirs,
         "evidence": why,
         "caveat": (f"这是 {rows[0]['date']} 至 {rows[-1]['date']} 共 {len(rows)} 个交易日的"
