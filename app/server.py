@@ -507,6 +507,22 @@ def _run(job, card_id):
 SYM_RE = __import__("re").compile(r"^[A-Za-z0-9._-]{1,20}$")
 
 
+def normalize_symbol(symbol, market):
+    """把用户能敲出来的各种写法，改成数据源认的写法。
+
+    支持：600519 / 600519.SH / SH600519 / sh600519 / 002541.SZ / SZ002541
+    美股只做大写，保留点号（BRK.B 是合法代码）。
+    """
+    import re as _re
+    s = (symbol or "").strip().upper()
+    if market == "cn":
+        s = s.split(".")[0]
+        m = _re.match(r"^(SH|SZ|BJ)?(\d{6})$", s)
+        if m:
+            return m.group(2)
+    return s
+
+
 def check_fetch_args(market, symbol, start, end):
     """校验拉取参数。返回错误信息或 None。"""
     from datetime import datetime
@@ -537,7 +553,7 @@ def fetch_symbol(symbol, market, start, end, proxy=""):
     为什么不起子进程：受限环境下子进程的管道 stdio 会被拒绝，表现为
     连接被意外关闭（我实测踩到过）。进程内调用没有这个问题，还快一点。
     """
-    symbol = (symbol or "").strip().upper()
+    symbol = normalize_symbol(symbol, market)
     err = check_fetch_args(market, symbol, start, end)
     if err:
         return {"ok": False, "error": err}
@@ -672,7 +688,8 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/cards":
                 return self._send(200, json.dumps(save_card(payload), ensure_ascii=False))
             if path == "/api/report":
-                sym = (payload.get("symbol") or "").strip().upper()
+                raw = (payload.get("symbol") or "").strip().upper()
+                sym = normalize_symbol(raw, (payload.get("market") or "").lower()) or raw
                 try:
                     from datetime import date as _date
                     from tools.stock_report import build_report
