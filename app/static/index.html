@@ -219,16 +219,32 @@ select.w{width:auto;min-width:220px}
       <div class="hint" id="ledgerHint"></div></div>
   </section>
 
-  <section class="view" id="v-reports">
-    <h2 class="page">报告</h2>
-    <p class="sub">四棒的交付物与两份规划文档，原文渲染。</p>
-    <div class="flex" style="margin-bottom:14px">
-      <select id="mdPick" class="w"></select>
-      <span class="hint" style="margin:0" id="mdMeta"></span>
-    </div>
-    <div class="box"><div class="md" id="mdBody"><span class="loading">选择一份报告…</span></div></div>
-  </section>
+    <section class="view" id="v-reports">
+    <h2 class="page">分析报告</h2>
+    <p class="sub">选一只已经入库的股票，生成一份决策用的报告：数据靠不靠谱、历史上是趋势还是震荡、接下来能试哪个方向。</p>
 
+    <div class="box">
+      <div class="flex">
+        <input id="r-symbol" placeholder="输入代码，如 AAPL / 600519" style="max-width:300px">
+        <button class="act" id="btnReport">生成报告</button>
+        <span class="hint" style="margin:0" id="r-hint">报告会存到 reports\ 目录，同时显示在这里</span>
+      </div>
+    </div>
+
+    <div class="box" id="r-box" style="margin-top:14px;display:none">
+      <div class="flex" style="margin-bottom:12px">
+        <span class="badge pass" id="r-badge">已生成</span>
+        <span class="muted mono" id="r-path"></span>
+        <button class="ghost" id="btnCopyMd">复制 Markdown</button>
+      </div>
+      <div class="md" id="r-body"></div>
+    </div>
+
+    <div class="box" style="margin-top:14px">
+      <h3>已有报告</h3>
+      <div id="r-list" class="hint">加载中…</div>
+    </div>
+  </section>
 <section class="view" id="v-glossary">
     <h2 class="page">术语白话库</h2>
     <p class="sub">看懂这份报告需要的词，全在这儿。页面和报告里的蓝色虚线下划线都可以点。</p>
@@ -359,7 +375,7 @@ function show(v){
   if(v==='data') loadData();
   if(v==='tools') loadTools();
   if(v==='cards') loadCards();
-  if(v==='reports' && !el('mdPick').dataset.init) initReports();
+  if(v==='reports') loadReportList();
   if(v==='glossary') loadGlossary();
 }
 
@@ -558,244 +574,59 @@ function loadTools(){
   });
 }
 
-/* ---------- 报告 ---------- */
-function initReports(){
-  var list=['research.md','design.md','test-report.md','ROADMAP-v2.md','RUNBOOK.md','README.md'];
-  el('mdPick').innerHTML=list.map(function(n){
-    return '<option value="'+n+'">'+n+'</option>';}).join('');
-  el('mdPick').dataset.init='1';
-  el('mdPick').onchange=function(){loadMd(this.value);};
-  loadMd(list[0]);
-}
-function loadMd(name){
-  if(el('mdBody')) el('mdBody').dataset.name = name;
-  el('mdBody').innerHTML='<span class="loading">读取中…</span>';
-  api('/api/md?name='+encodeURIComponent(name)).then(function(r){
-    if(r.error){el('mdBody').innerHTML='<span class="badge err">'+esc(r.error)+'</span>';return;}
-    el('mdMeta').textContent=r.content.length+' 字符';
-    el('mdBody').innerHTML=md2html(r.content);
+/* ---------- 分析报告 ---------- */
+function genReport(){
+  var sym = el('r-symbol').value.trim().toUpperCase();
+  if(!sym){ el('r-hint').textContent='先填代码'; el('r-symbol').focus(); return; }
+  el('r-hint').textContent = '生成中…（要算结构，约 1–3 秒）';
+  el('btnReport').disabled = true;
+  api('/api/report',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({symbol:sym})}).then(function(r){
+    el('btnReport').disabled = false;
+    if(r.error){ el('r-hint').textContent = r.error; return; }
+    el('r-hint').textContent = '好了：' + r.chars + ' 字符';
+    el('r-box').style.display = 'block';
+    el('r-path').textContent = r.path;
+    el('r-body').innerHTML = md2html(r.markdown);
+    el('r-body').dataset.name = '';
+    window.__lastMd = r.markdown;
+    loadReportList();
   });
 }
-/* 极简 markdown：标题/表格/列表/引用/代码/粗体/行内代码 */
-function md2html(src){
-  var lines=src.split(/\r?\n/), out=[], i=0, inCode=false, tbl=[];
-  function inline(s){
-    s=esc(s);
-    s=s.replace(/`([^`]+)`/g,'<code>$1</code>');
-    s=s.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
-    s=s.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" style="color:var(--acc)">$1</a>');
-    return s;
-  }
-  function flushTable(){
-    if(!tbl.length)return;
-    var rows=tbl.filter(function(r){return !/^\|[\s:\-|]+\|$/.test(r.trim());});
-    var html='<table>';
-    rows.forEach(function(r,idx){
-      var cells=r.trim().replace(/^\||\|$/g,'').split('|');
-      html+='<tr>'+cells.map(function(c){
-        return (idx===0?'<th>':'<td>')+inline(c.trim())+(idx===0?'</th>':'</td>');
-      }).join('')+'</tr>';
-    });
-    html+='</table>';out.push(html);tbl=[];
-  }
-  while(i<lines.length){
-    var L=lines[i];
-    if(/^```/.test(L)){
-      if(inCode){out.push('</code></pre>');inCode=false;}
-      else{flushTable();out.push('<pre><code>');inCode=true;}
-      i++;continue;
-    }
-    if(inCode){out.push(esc(L));i++;continue;}
-    if(/^\s*\|.*\|\s*$/.test(L)){tbl.push(L);i++;continue;}
-    flushTable();
-    if(/^\s*$/.test(L)){i++;continue;}
-    if(/^#{1,4}\s/.test(L)){
-      var lv=Math.min(4,(L.match(/^#+/)||['#'])[0].length);
-      out.push('<h'+lv+'>'+inline(L.replace(/^#+\s*/,''))+'</h'+lv+'>');
-    } else if(/^>\s?/.test(L)){
-      out.push('<blockquote>'+inline(L.replace(/^>\s?/,''))+'</blockquote>');
-    } else if(/^\s*[-*]\s+/.test(L)){
-      out.push('<div style="padding-left:18px;position:relative"><span style="position:absolute;'+
-        'left:4px;color:var(--dim2)">•</span>'+inline(L.replace(/^\s*[-*]\s+/,''))+'</div>');
-    } else if(/^\s*\d+\.\s+/.test(L)){
-      out.push('<div style="padding-left:18px">'+inline(L)+'</div>');
-    } else if(/^---+$/.test(L.trim())){
-      out.push('<hr>');
-    } else {
-      out.push('<p style="margin:8px 0">'+inline(L)+'</p>');
-    }
-    i++;
-  }
-  flushTable();
-  if(inCode)out.push('</code></pre>');
-  return glossify(out.join('\n'));
-}
+el('btnReport').onclick = genReport;
+el('btnCopyMd').onclick = function(){
+  if(!window.__lastMd) return;
+  navigator.clipboard.writeText(window.__lastMd).then(function(){
+    el('btnCopyMd').textContent = '已复制';
+    setTimeout(function(){ el('btnCopyMd').textContent = '复制 Markdown'; }, 1500);
+  });
+};
 
-/* ---------- 数据 ---------- */
-function loadData(){
-  api('/api/status').then(function(d){
-    el('dataStats').innerHTML=[
-      ['缓存文件',d.cache_files,'本地 CSV 数量'],
-      ['宇宙标的',d.universe_size,'申请 '+(d.requested||'—')+' 只'],
-      ['覆盖率',d.coverage?(Math.round(d.coverage*100)+'%'):'—','缺口即残余偏差'],
-      ['退市样本',d.delisted_ok==null?'—':d.delisted_ok,'含退市票是诚实宇宙的关键']
-    ].map(function(s){
-      return '<div class="box stat"><div class="k">'+s[0]+'</div><div class="v">'+esc(s[1])+
-        '</div><div class="n">'+esc(s[2])+'</div></div>';
+function loadReportList(){
+  api('/api/reports').then(function(d){
+    if(!d.files || !d.files.length){
+      el('r-list').textContent = '还没有报告。上面输入代码就能生成第一份。';
+      return;
+    }
+    el('r-list').innerHTML = d.files.map(function(f){
+      return '<div style="margin-bottom:6px"><a href="#" class="rep" data-f="'+esc(f.name)+'" '+
+        'style="color:var(--acc)">'+esc(f.name)+'</a>'+
+        '<span class="muted" style="margin-left:10px">'+f.kb+' KB · '+esc(f.mtime)+'</span></div>';
     }).join('');
-  });
-  api('/api/cache').then(function(d){
-    el('cacheTable').innerHTML=
-      '<thead><tr><th>文件</th><th>行数</th><th>大小</th></tr></thead><tbody>'+
-      (d.files.map(function(f){
-        return '<tr><td class="mono">'+esc(f.name)+'</td><td class="num">'+f.rows+
-          '</td><td class="num">'+f.kb+' KB</td></tr>';
-      }).join('')||'<tr><td colspan="3" class="loading">没有缓存</td></tr>')+'</tbody>';
-  });
-}
-
-/* ---------- 结构画像 ---------- */
-function loadProfile(sym){
-  if(!sym){
-    el('profResult').innerHTML='<span class="hint" style="margin:0">'+
-      '先在上面填一个代码（例如刚上传的那只），再点「分析结构」。</span>';
-    el('p-symbol').focus();
-    return;
-  }
-  el('profResult').innerHTML='<span class="loading">计算中…</span>';
-  api('/api/profile?symbol='+encodeURIComponent(sym)).then(function(r){
-    if(r.error){el('profResult').innerHTML='<span class="badge err">'+esc(r.error)+'</span>';return;}
-    if(r.ok===false){el('profResult').innerHTML='<span class="badge err">'+esc(r.reason)+'</span>';return;}
-    el('profResult').innerHTML =
-      '<div class="flex" style="margin-bottom:10px">'+
-        '<span class="badge '+(r.structure==='趋势型'?'pass':'err')+'">'+esc(r.structure)+'</span>'+
-        '<span class="muted">'+esc(sym)+' · '+r.rows+' 行 / '+r.years+' 年 · '+
-        esc(r.first)+' → '+esc(r.last)+'</span></div>'+
-      '<div class="nums">'+
-        [['年化收益',(r.annual_return*100).toFixed(2)+'%'],
-         ['年化波动',(r.annual_vol*100).toFixed(2)+'%'],
-         ['最大回撤',(r.max_drawdown*100).toFixed(2)+'%'],
-         ['lag1 自相关',r.autocorr1],
-         ['VR5',r.vr5],['VR20',r.vr20]]
-        .map(function(x){return '<div class="n"><div class="k">'+x[0]+
-          '</div><div class="v">'+esc(x[1])+'</div></div>';}).join('')+'</div>'+
-      '<div style="margin-top:12px;font-size:13px">'+
-      '<div class=\"hint\" style=\"margin:10px 0 0\">lag1 自相关：今天的涨跌跟昨天还有没有关系（正＝顺着走，负＝往回摆）。VR：波动越滚越大还是被吃掉。z：把日期打乱重来 120 次，看这个值有多难得 —— 超过 2 才算「不是碰巧」。</div>'+
-        r.evidence.map(function(w){return '<div>· '+esc(w)+'</div>';}).join('')+'</div>'+
-      '<div style="margin-top:10px;font-size:13px;color:var(--dim)"><b style="color:var(--fg)">提示：</b>'+
-        esc(r.hint)+
-        (r.allowed_directions.length?'<br>可试方向：<span class="mono">'+
-          esc(r.allowed_directions.join(' / '))+'</span>':'')+'</div>'+
-      '<div class="hint" style="color:var(--warn)">⚠ '+esc(r.caveat)+'</div>';
+    document.querySelectorAll('a.rep').forEach(function(a){
+      a.onclick = function(ev){
+        ev.preventDefault();
+        api('/api/md?name=' + encodeURIComponent('reports/' + a.dataset.f)).then(function(r){
+          if(r.error){ el('r-hint').textContent = r.error; return; }
+          el('r-box').style.display='block';
+          el('r-path').textContent = 'reports/' + a.dataset.f;
+          el('r-body').innerHTML = md2html(r.content);
+          window.__lastMd = r.content;
+        });
+      };
+    });
   });
 }
-el('btnProfile').onclick=function(){loadProfile(el('p-symbol').value.trim());};
-
-function loadProfileAll(){
-  el('pallResult').innerHTML='<span class="loading">扫描缓存中…（106 个文件，约 3–8 秒）</span>';
-  el('pallSum').textContent='';
-  api('/api/profile_all').then(function(r){
-    if(r.error){el('pallResult').innerHTML='<span class="badge err">'+esc(r.error)+'</span>';return;}
-    var s=r.summary||{};
-    el('pallSum').innerHTML='共 <b>'+r.count+'</b> 只：趋势型 <b>'+s['趋势型']+
-      '</b> · 均值回归型 <b>'+s['均值回归型']+'</b> · 无明显结构 <b>'+s['无明显结构']+'</b>';
-    var mixed = (s['趋势型']||0)>0 && (s['均值回归型']||0)>0;
-    el('pallResult').innerHTML =
-      (mixed?'<div class="hint" style="color:var(--warn);margin:0 0 10px">'+
-        '⚠ 结构混杂：做截面研究时建议分开子集，不要把两种结构混在一个排序里</div>':'')+
-      '<table><thead><tr><th>标的</th><th>市场</th><th>年数</th><th>年化</th><th>波动</th>'+
-      '<th>回撤</th><th>lag1</th><th>VR20</th><th>结构</th></tr></thead><tbody>'+
-      r.rows.slice(0,60).map(function(x){
-        var cls=x.structure==='趋势型'?'pass':(x.structure==='均值回归型'?'err':'mut');
-        function p(v,d){return v===null||v===undefined?'—':(v*100).toFixed(d===undefined?1:d)+'%';}
-        function n(v,d){return v===null||v===undefined?'—':v.toFixed(d);}
-        return '<tr><td class="mono">'+esc(x.symbol)+'</td><td class="mut">'+esc(x.market)+
-          '</td><td class="num">'+n(x.years,1)+'</td><td class="num">'+p(x.annual_return)+
-          '</td><td class="num">'+p(x.annual_vol)+'</td><td class="num">'+p(x.max_drawdown)+
-          '</td><td class="num">'+n(x.autocorr1,3)+'</td><td class="num">'+n(x.vr20,2)+
-          '</td><td><span class="badge '+cls+'">'+esc(x.structure)+'</span></td></tr>';
-      }).join('')+'</tbody></table>'+
-      (r.rows.length>60?'<div class="hint">仅显示前 60 只，完整清单见 profiles.json</div>':'');
-  });
-}
-el('btnProfileAll').onclick=loadProfileAll;
-
-/* ---------- 按代码拉取 ---------- */
-function doFetch(){
-  var sym = el('f-symbol').value.trim().toUpperCase();
-  if(!sym){ el('fetchResult').innerHTML='<span class="hint">先填代码。</span>'; el('f-symbol').focus(); return; }
-  var body = {market:el('f-market').value, symbol:sym,
-              start:el('f-start').value, end:el('f-end').value,
-              proxy:el('f-proxy').value.trim()};
-  el('fetchResult').innerHTML='<span class="loading">拉取中…（美股走代理，通常 3–10 秒）</span>';
-  el('btnFetch').disabled = true;
-  api('/api/fetch',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(body)}).then(function(r){
-    el('btnFetch').disabled = false;
-    if(!r.ok){
-      el('fetchResult').innerHTML='<div style="color:var(--fail);font-size:13px"><b>拉取失败</b><br>'+
-        esc(r.error||'未知原因')+(r.output?'<pre style="margin-top:8px">'+esc(r.output)+'</pre>':'')+'</div>';
-      return;
-    }
-    el('fetchResult').innerHTML='<div style="font-size:13px"><span class="badge pass">已入库</span> '+
-      '<span class="mono">'+esc(r.file)+'</span> <span class="muted">'+r.rows+' 个交易日</span></div>';
-    loadData();
-    el('p-symbol').value = sym;
-    loadProfile(sym);
-    el('fetchHint').textContent = '完成，已自动画出结构画像';
-  });
-}
-el('btnFetch').onclick = doFetch;
-/* ---------- 上传 ---------- */
-var pending = null;
-(function initUpload(){
-  var drop=el('drop'), file=el('file');
-  drop.onclick=function(){file.click();};
-  drop.ondragover=function(e){e.preventDefault();drop.style.borderColor='var(--acc)';};
-  drop.ondragleave=function(){drop.style.borderColor='var(--line)';};
-  drop.ondrop=function(e){
-    e.preventDefault();drop.style.borderColor='var(--line)';
-    if(e.dataTransfer.files.length) takeFile(e.dataTransfer.files[0]);
-  };
-  file.onchange=function(){if(file.files.length)takeFile(file.files[0]);};
-})();
-function takeFile(f){
-  var r=new FileReader();
-  r.onload=function(){
-    pending=r.result;
-    el('drop').innerHTML='已选择：<b style="color:var(--fg)">'+esc(f.name)+'</b>（'+
-      Math.round(f.size/1024)+' KB）<br><span style="font-size:11.5px;color:var(--dim2)">'+
-      '再点一次选择可换文件</span>';
-    el('btnUpload').disabled=false;
-  };
-  r.readAsText(f,'utf-8');
-}
-function uploadData(){
-  if(!pending){return;}
-  var sym=el('u-symbol').value.trim();
-  if(!sym){alert('请填代码，例如 MYSTOCK');return;}
-  el('upResult').innerHTML='<span class="loading">校验中…</span>';
-  api('/api/upload',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({content:pending,market:el('u-market').value,symbol:sym})
-  }).then(function(r){
-    if(!r.ok){
-      el('upResult').innerHTML='<div style="color:var(--fail);font-size:13px">'+
-        '<b>校验未通过</b><br>'+esc(r.error)+
-        (r.dropped_bad_price?'<br>另有 '+r.dropped_bad_price+' 行价格非正被丢弃':'')+'</div>';
-      return;
-    }
-    el('upResult').innerHTML='<div style="font-size:13px">'+
-      '<span class="badge pass">已入库</span> '+
-      '<span class="mono">'+esc(r.file)+'</span><br>'+
-      '<span class="muted">'+r.rows+' 个交易日，'+esc(r.first)+' → '+esc(r.last)+
-      '；去重 '+r.dedup+' 行，丢弃非正价 '+r.dropped_bad_price+' 行</span>'+
-      '<div class="hint">'+esc(r.hint)+'</div></div>';
-    loadData();
-    el('p-symbol').value=sym; loadProfile(sym);   // 上传成功就顺手画像
-  });
-}
-el('btnUpload').onclick=uploadData;
-el('btnSave').onclick=saveCard;
 /* ==================== 术语白话库 ==================== */
 var GL = {list: [], map: {}, re: null, loaded: false};
 
@@ -869,7 +700,7 @@ function loadGlossary(){
   });
 }
 if (el('g-q')) el('g-q').oninput = function(){ renderGlossary(this.value); };
-loadOverview();loadPaths();loadCards();
+loadOverview();loadPaths();loadCards();loadReportList();
 loadGlossary();
 </script>
 </body>

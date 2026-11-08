@@ -20,7 +20,7 @@ r"""量化研究台 —— 后端 API（标准库，零依赖）。
     GET  /api/status           数据状态
     GET  /api/cache            缓存文件清单
     GET  /api/profile?symbol=X 单标的结构画像（描述统计）\n    GET  /api/profile_all     批量结构画像（120 秒缓存）\n    GET  /api/glossary        术语白话库\n    GET  /api/md?name=xxx.md   读取报告原文（白名单）
-    POST /api/fetch {symbol}   按代码自动拉数据（美股走代理/A股绕过）\n    POST /api/upload           上传自备 CSV（校验并落成标准表）\n    POST /api/run {id}         跑卡
+    POST /api/report {symbol}  生成单只股票的分析报告\n    POST /api/fetch {symbol}   按代码自动拉数据（美股走代理/A股绕过）\n    POST /api/upload           上传自备 CSV（校验并落成标准表）\n    POST /api/run {id}         跑卡
     GET  /api/job/{job}        轮询任务
 
 启动
@@ -33,6 +33,7 @@ import sys
 import threading
 import time
 import uuid
+from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -186,9 +187,33 @@ def cache_list(limit=40):
              "rows": sum(1 for _ in p.open(encoding="utf-8", errors="replace")) - 1} for p in files]
 
 
+def list_reports(limit=50):
+    """列出 reports/ 下已生成的报告（新的在前）。"""
+    d = ROOT / "reports"
+    out = []
+    if not d.is_dir():
+        return out
+    for f in d.glob("*.md"):
+        try:
+            st = f.stat()
+        except OSError:
+            continue
+        out.append({"name": f.name, "kb": round(st.st_size / 1024, 1),
+                    "mtime": st.st_mtime})
+    out.sort(key=lambda x: x["mtime"], reverse=True)
+    for x in out:
+        x["mtime"] = datetime.fromtimestamp(x["mtime"]).strftime("%m-%d %H:%M")
+    return out[:limit]
+
+
 def read_md(name):
+    """读报告原文。允许根目录白名单文件，以及 reports/ 下的 .md（禁止路径穿越）。"""
     if name not in ALLOWED_MD:
-        raise ValueError("不在白名单里")
+        sub = name[8:]
+        ok = (name.startswith("reports/") and name.endswith(".md")
+              and ".." not in name and "/" not in sub and "\\" not in name)
+        if not ok:
+            raise ValueError("不在白名单里")
     p = ROOT / name
     if not p.is_file():
         raise ValueError("文件不存在")
@@ -600,6 +625,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, json.dumps(data, ensure_ascii=False))
             except (OSError, ValueError, ImportError) as e:
                 return self._send(500, json.dumps({"error": str(e)}, ensure_ascii=False))
+        if path == "/api/reports":
+            return self._send(200, json.dumps({"files": list_reports()}, ensure_ascii=False))
         if path == "/api/profile":
             sym = (parse_qs(u.query).get("symbol") or [""])[0].strip().upper()
             if not sym:
@@ -644,6 +671,29 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path == "/api/cards":
                 return self._send(200, json.dumps(save_card(payload), ensure_ascii=False))
+            if path == "/api/report":
+                sym = (payload.get("symbol") or "").strip().upper()
+                try:
+                    from datetime import date as _date
+                    from tools.stock_report import build_report
+                    from tools.validate import find_cached, read_csv
+                    path_ = find_cached(ROOT / "data_cache", sym)
+                    if path_ is None:
+                        return self._send(404, json.dumps(
+                            {"error": f"数据里没有 {sym}，先拉取或上传"}, ensure_ascii=False))
+                    rows = read_csv(path_)
+                    market = path_.name.split("_")[0]
+                    md = build_report(rows, sym, market, path_.name)
+                    out = ROOT / "reports" / f"{sym}_分析报告_{_date.today().isoformat()}.md"
+                    out.parent.mkdir(parents=True, exist_ok=True)
+                    out.write_text(md, encoding="utf-8")
+                    return self._send(200, json.dumps(
+                        {"ok": True, "symbol": sym, "markdown": md,
+                         "path": str(out.relative_to(ROOT)), "chars": len(md)},
+                        ensure_ascii=False))
+                except (OSError, ValueError, KeyError) as e:
+                    return self._send(500, json.dumps(
+                        {"error": f"{type(e).__name__}: {e}"}, ensure_ascii=False))
             if path == "/api/fetch":
                 r = fetch_symbol(payload.get("symbol", ""), payload.get("market", "us"),
                                  payload.get("start", "2010-01-01"),
