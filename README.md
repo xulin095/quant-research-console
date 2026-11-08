@@ -79,6 +79,7 @@ tools/          研究工具（每个都能单独命令行跑）
 └─ fetch_basket.py   批量拉数据
 
 data/           数据源适配器（可插拔，注册表在 data/registry.py）
+referee/        独立裁判（不 import 项目代码，专门用来验项目自己）
 cards/          假设卡（每个假设一份，参数冻结）
 tests/          126 个测试
 ```
