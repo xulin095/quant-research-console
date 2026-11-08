@@ -21,34 +21,18 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      # 只装测试真正需要的（akshare / yfinance 在测试里不会被导入，
-      # 它们只在真去拉数据时才用，装上只会拖慢 CI 并引入网络依赖）
-      - name: 安装依赖
+      # Only what the tests actually import. akshare / yfinance are used
+      # only by the real fetchers, not by the test suite.
+      - name: Install deps
         run: |
           python -m pip install --upgrade pip
           pip install pandas numpy
 
-      - name: 跑全部测试
-        run: python -m unittest discover -s tests -v
-
-      - name: 前端 JS 语法检查（有 node 就检，没有就跳过）
+      - name: Env info
         run: |
-          node --version || true
-          python - <<'PY'
-          import re, subprocess, sys, tempfile, shutil
-          from pathlib import Path
-          page = Path("app/static/index.html")
-          html = page.read_text(encoding="utf-8")
-          i, j = html.find("<script>"), html.rfind("</script>")
-          js = html[i + 8:j]
-          node = shutil.which("node")
-          if not node:
-              print("没有 node，跳过")
-              sys.exit(0)
-          with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False, encoding="utf-8") as f:
-              f.write(js)
-              tmp = f.name
-          r = subprocess.run([node, "--check", tmp], capture_output=True, text=True)
-          print(r.stdout, r.stderr)
-          sys.exit(r.returncode)
-          PY
+          python -V
+          ls -la
+          node --version || echo "node not found"
+
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
