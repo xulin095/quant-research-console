@@ -53,7 +53,7 @@ S = {
         "none_head": "**这只票历史上看不出稳定结构**：趋势和回归都不占优。",
         "none_next": "这种情况下硬套方向是最容易亏钱的做法 —— 建议换一只票，或换一类信号。",
         "th_item": "| 项目 | 数值 | 怎么看 |", "th_metric": "| 指标 | 数值 | 含义 |",
-        "row_days": "| 交易日数 | {n} 天（约 {y} 年） | 少于 60 天无法分析 |",
+        "row_days": "| 样本交易日数 | {n} 天（约 {y} 年） | 少于 60 天无法分析 |",
         "row_range": "| 区间 | {first} → {last} | 越长越能覆盖不同行情 |",
         "row_price": "| 价格范围 | {lo:.2f} – {hi:.2f} | 含 0 或负数说明复权口径有问题 |",
         "row_bad": "| 非正价格 | {n} 行 | 必须为 0 |",
@@ -65,6 +65,7 @@ S = {
         "row_ac": "| lag1 自相关 | {v} | 今天的涨跌跟昨天还有没有关系（正＝有惯性，负＝会回吐） |",
         "row_vr": "| VR20 | {v} | 20 天波动 / 1 天波动；>1 波动被放大，<1 被吃掉 |",
         "row_z": "| 置换 z 值 | {v} | 把日期打乱重来 120 次后，这个 VR 有多罕见（\\|z\\|>2 才算有结构） |",
+        "row_ret": "| 年化收益 | {v}% | 长期持有时每年大致赚多少 |",
         "row_vol": "| 年化波动 | {v}% | 价格晃得有多厉害 |",
         "row_dd": "| 最大回撤 | {v}%（{days} 天） | 历史上最难受的时候亏多少 |",
         "stability_note": "> ⚠ 实测提醒：把历史切成前后两段，前段判出「有结构」的 25 只标的里只有 2 只（8%）在后段保持同一判定。单只票的结构判定描述的是**这一段历史**，不是下一段；它只用来决定先往哪个方向写卡，不能当交易信号。",
@@ -87,7 +88,7 @@ S = {
         "why_revert": "结构像涨跌回吐：过去跌得多的，倾向反弹。用「买过去跌得多的」去检验。",
         "msg_done": "已生成：{out}（{n} 字符）",
         "msg_missing": "缓存里找不到 {sym}",
-        "filename": "{sym}_分析报告_{today}.md",
+        "filename": "{sym}_{market}_分析报告_{today}.md",
     },
     "en": {
         "title": "# {symbol} analysis report",
@@ -106,7 +107,7 @@ S = {
         "none_head": "**No stable structure is visible in this ticker**: neither trend nor reversion dominates.",
         "none_next": "Forcing a direction here is the easiest way to lose money -- consider another ticker or another class of signal.",
         "th_item": "| Item | Value | How to read it |", "th_metric": "| Metric | Value | Meaning |",
-        "row_days": "| Trading days | {n} (~{y} years) | fewer than 60 cannot be analysed |",
+        "row_days": "| Sample trading days | {n} (~{y} years) | fewer than 60 cannot be analysed |",
         "row_range": "| Range | {first} -> {last} | longer covers more regimes |",
         "row_price": "| Price range | {lo:.2f} - {hi:.2f} | zero or negative means the adjustment is broken |",
         "row_bad": "| Non-positive prices | {n} rows | must be 0 |",
@@ -118,6 +119,7 @@ S = {
         "row_ac": "| lag1 autocorrelation | {v} | does today remember yesterday (positive = persistence, negative = give-back) |",
         "row_vr": "| VR20 | {v} | 20-day variance / 1-day variance; above 1 compounds, below 1 gets eaten |",
         "row_z": "| Permutation z | {v} | how rare this VR is when the date order is shuffled 120 times (\\|z\\| > 2 counts as structure) |",
+        "row_ret": "| Annualised return | {v}% | roughly what holding it paid per year |",
         "row_vol": "| Annualised volatility | {v}% | how violently the price moves |",
         "row_dd": "| Maximum drawdown | {v}% ({days} days) | the worst peak-to-trough loss on record |",
         "stability_note": "> ⚠ Measured caveat: splitting history in two, only 2 of 25 tickers (8%) that showed a structure in the first half kept the same verdict in the second half. A single-ticker verdict describes *that* period, not the next one; use it to decide which direction to write a card for, never as a trading signal.",
@@ -140,7 +142,7 @@ S = {
         "why_revert": "The structure looks like give-back: past losers tend to bounce. Test 'buy past losers'.",
         "msg_done": "written: {out} ({n} chars)",
         "msg_missing": "no cached data for {sym}",
-        "filename": "{sym}_report_{today}.md",
+        "filename": "{sym}_{market}_report_{today}.md",
     },
 }
 
@@ -243,6 +245,7 @@ def build_report(rows, symbol, market, cache_name="", lang="zh"):
         L.append(T["row_ac"].format(v=prof["autocorr1"]))
         L.append(T["row_vr"].format(v=prof["vr20"]))
         L.append(T["row_z"].format(v=prof["vr20_z"]))
+        L.append(T["row_ret"].format(v=f"{prof['annual_return']*100:.2f}"))
         L.append(T["row_vol"].format(v=f"{prof['annual_vol']*100:.2f}"))
         L.append(T["row_dd"].format(v=f"{prof['max_drawdown']*100:.2f}",
                                      days=prof["max_dd_days"]))
@@ -306,9 +309,9 @@ def build_report(rows, symbol, market, cache_name="", lang="zh"):
     return "\n".join(L)
 
 
-def report_filename(symbol, lang="zh"):
+def report_filename(symbol, market="", lang="zh"):
     T = S.get(lang, S["zh"])
-    return T["filename"].format(sym=symbol, today=date.today().isoformat())
+    return T["filename"].format(sym=symbol, market=market or "na", today=date.today().isoformat())
 
 
 def main(argv=None):
@@ -330,7 +333,7 @@ def main(argv=None):
     market = path.name.split("_")[0]
     rows = read_csv(path)
     md = build_report(rows, sym, market, path.name, lang=args.lang)
-    out = Path(args.out) if args.out else Path("reports") / report_filename(sym, args.lang)
+    out = Path(args.out) if args.out else Path("reports") / report_filename(sym, market, args.lang)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(md, encoding="utf-8")
     print(T["msg_done"].format(out=out, n=len(md)))

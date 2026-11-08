@@ -20,3 +20,7 @@ Thumbs.db
 
 # 生成的画像汇总（可由 data_cache 重算）
 profiles.json
+
+# 评估输出
+ eval_live.json
+eval_split.json

@@ -43,19 +43,41 @@ EXPECTED_FILES = [
 ALLOW_EXTRA = {
     ".gitignore", ".gitattributes", "reports/__init__.py",
     "research.md", "design.md", "test-report.md", "ROADMAP-v2.md",
+    # v2 新增（开源与文档）
+    "README.md", "README.zh-CN.md", "LICENSE", "CONTRIBUTING.md",
+    "RUNBOOK.md", "glossary.json", "启动研究台.bat",
+    # 项目自身的运行产物（账本与结论数据，随仓库发布）
+    "profiles.json", "registry.jsonl", "results.json", "universe.json",
 }
 
 # v2 允许新增的目录（工具、策略、数据仓库）。v1 的 16 文件契约仍然有效，
 # 但这些目录里的东西不该被算成"多余文件"。
-ALLOW_PREFIXES = ("tools/", "strategies/", "store/", "tests/")
+ALLOW_PREFIXES = ("tools/", "strategies/", "store/", "tests/",
+                  "referee/", "docs/", ".github/", "app/", "cards/", "samples/")
 
-CHAPTERS = ["## 1. 基本信息", "## 2. 近期价格", "## 3. 回测结果", "## 4. 交易记录", "## 5. 风险提示"]
+# v1 回测报告与 v2 分析报告是两种文档，各自有一套章节；报告只要满足其中一套即可
+CHAPTER_SETS = [
+    ["## 1. 基本信息", "## 2. 近期价格", "## 3. 回测结果", "## 4. 交易记录", "## 5. 风险提示"],
+    ["## 1. 数据体检", "## 2. 结构判断", "## 3. 能做什么", "## 4. 已知风险", "## 5. 免责声明"],
+    ["## 1. Data health", "## 2. Structural verdict", "## 3. What is worth testing",
+     "## 4. Known risks", "## 5. Disclaimer"],
+]
+CHAPTERS = CHAPTER_SETS[0]   # 向后兼容旧引用
 
 BANNED = ["建议买入", "建议卖出", "推荐", "看好", "一定涨", "一定跌", "目标价", "值得买"]
 
-REQUIRED_PHRASES = ["只代表过去，不代表未来", "不要用实盘资金直接照抄"]
+REQUIRED_PHRASE_SETS = [
+    ["只代表过去，不代表未来", "不要用实盘资金直接照抄"],
+    ["describes the past, not the future", "Do not trade real money"],
+]
+REQUIRED_PHRASES = REQUIRED_PHRASE_SETS[0]
 
-RISK_LABELS = ["总收益率", "年化收益率", "最大回撤", "夏普比率", "胜率", "交易次数"]
+RISK_LABEL_SETS = [
+    ["总收益率", "年化收益率", "最大回撤", "夏普比率", "胜率", "交易次数"],   # v1 回测报告
+    ["年化收益", "年化波动", "最大回撤"],                                  # v2 分析报告
+    ["Annualised return", "Annualised volatility", "Maximum drawdown"],     # 英文版
+]
+RISK_LABELS = RISK_LABEL_SETS[0]
 
 # config.py 必须出现的字面量（弱检查：只证明写了，不证明用了）
 CONFIG_LITERALS = {
@@ -187,12 +209,15 @@ def check_3_chapters(root):
         return "SKIP", "没有报告，跳过"
     bad = []
     for rp, text in pairs:
-        missing = [c for c in CHAPTERS if c not in text]
-        if missing:
+        best = min(CHAPTER_SETS, key=lambda cs: sum(1 for c in cs if c not in text))
+        missing = [c for c in best if c not in text]
+        if len(missing) == len(best):          # 一套都不满足
+            bad.append(f"{rp.name} 不匹配任何已知报告格式")
+        elif missing:
             bad.append(f"{rp.name} 缺 {', '.join(missing)}")
     if bad:
         return "FAIL", f"{len(bad)}/{len(repos)} 份报告缺章节：{'；'.join(bad[:2])}"
-    return "PASS", f"{len(repos)} 份报告 5 章标题都一字不差"
+    return "PASS", f"{len(repos)} 份报告章节齐全（v1 回测 / v2 分析 / 英文版任一）"
 
 
 def check_4_banned(root):
@@ -216,8 +241,12 @@ def check_5_required(root):
         return "SKIP", "没有报告，跳过"
     bad = []
     for rp, text in pairs:
-        missing = [x for x in REQUIRED_PHRASES if x not in text]
-        if missing:
+        best = min(REQUIRED_PHRASE_SETS,
+                   key=lambda ps: sum(1 for x in ps if x not in text))
+        missing = [x for x in best if x not in text]
+        if len(missing) == len(best):
+            bad.append(f"{rp.name} 缺免责声明（中英两套都没有）")
+        elif missing:
             bad.append(f"{rp.name} 缺 {', '.join(missing)}")
     if bad:
         return "FAIL", "；".join(bad[:2])
@@ -230,10 +259,13 @@ def check_6_risk_table(root):
         return "SKIP", "没有报告，跳过"
     bad = []
     for rp, text in pairs:
-        missing = [l for l in RISK_LABELS if l not in text]
-        if missing:
+        best = min(RISK_LABEL_SETS, key=lambda ls: sum(1 for l in ls if l not in text))
+        missing = [l for l in best if l not in text]
+        if len(missing) == len(best):
+            bad.append(f"{rp.name} 没有任何已知的风险指标组合")
+        elif missing:
             bad.append(f"{rp.name} 缺风控项 {', '.join(missing)}")
-        elif "样本" not in text:
+        elif ("样本" not in text) and ("Sample" not in text):
             bad.append(f"{rp.name} 没写样本交易日数（防过拟合要求）")
     if bad:
         return "FAIL", "；".join(bad[:2])
@@ -253,8 +285,8 @@ def check_8_dangerous(root):
     hits = []
     for p in py_files(root):
         rel = p.relative_to(Path(root)).as_posix()
-        if rel.startswith("tests/"):
-            continue          # 测试里出现关键词是正常的（比如断言"没有 api_key"）
+        if rel.startswith(("tests/", "referee/")):
+            continue          # 测试与裁判脚本里出现关键词是正常的（它们自己就定义了关键词表）
         text = read_text(p) or ""
         for line_no, line in enumerate(text.splitlines(), 1):
             for pat, desc in DANGER_PATTERNS:
@@ -372,9 +404,55 @@ def check_11_cache(root):
 NAME_RE = re.compile(r"^(?P<symbol>[A-Za-z0-9._-]+?)_(?P<market>us|cn|crypto)(?=_|\.|$)")
 
 
+CACHE_IN_REPORT = re.compile(r"`([a-z]+_[A-Za-z0-9._-]+_\d{4}-\d{2}-\d{2}_\d{4}-\d{2}-\d{2}\.csv)`")
+
+
+def _cache_for(root, report_path):
+    """找到报告**实际使用**的那份缓存。
+
+    不能按名字猜：同一只票可能有多份不同区间的缓存（2015-2025 / 2020-2025 / ...），
+    猜错就会出现「报告数字与复算不符」的假警报 —— 我踩过一次。
+    报告头部写了数据文件名，从这里读最可靠。
+    """
+    d = Path(root) / "data_cache"
+    text = read_text(Path(report_path)) or ""
+    m = CACHE_IN_REPORT.search(text)
+    if m:
+        p = d / m.group(1)
+        if p.is_file():
+            return p
+    nm = NAME_RE.match(Path(report_path).name)
+    if nm:
+        hits = sorted(d.glob(f"{nm.group('market')}_{nm.group('symbol')}_*.csv"))
+        if hits:
+            return hits[-1]
+    hits = sorted(d.glob("*.csv"))
+    return hits[-1] if hits else Path("")
+
+
 def audit_one(root, report_path, script):
-    """复算单份报告。返回 (ok, 消息)。"""
+    """复算单份报告。返回 (ok, 消息)。
+
+    v2 的分析报告里没有回测指标，用 audit_recalc 比六项风控数字必然「对不上」。
+    所以先按内容判定报告类型：分析报告用 profile_check（结构数字对账），
+    v1 回测报告才用 audit_recalc（六项风控对账）。
+    """
     rp = Path(report_path)
+    text = read_text(rp) or ""
+    is_analysis = ("结构判断" in text or "Structural verdict" in text
+                   or "数据体检" in text or "Data health" in text)
+    if is_analysis:
+        script2 = Path(__file__).with_name("profile_check.py")
+        try:
+            r2 = subprocess.run([sys.executable, str(script2),
+                                 "--csv", str(_cache_for(root, rp)), "--report", str(rp)],
+                                capture_output=True, text=True, encoding="utf-8",
+                                errors="replace", timeout=300)
+        except (OSError, subprocess.TimeoutExpired) as e:
+            return None, f"分析报告复算失败：{e}"
+        if r2.returncode == 0:
+            return True, f"{rp.name} 结构与独立复算一致"
+        return False, f"{rp.name} 分析报告对不上：{(r2.stdout or r2.stderr)[-160:]}"
     m = NAME_RE.match(rp.name)
     extra = []
     if m:

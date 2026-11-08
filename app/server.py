@@ -534,7 +534,7 @@ def market_mismatch(market, symbol):
     报告里写着「市场 us」—— 数据是假的，标签也是假的。
 
     注意：这里对「带后缀」的写法宽容（cn 接受 002541.SZ / SH600519），
-    因为用户从券商软件复制出来就是这种格式。
+    因为用户从行情软件复制出来就是这种格式。
     """
     import re as _re
     s = (symbol or "").strip().upper()
@@ -759,7 +759,7 @@ class Handler(BaseHTTPRequestHandler):
                     lg = (payload.get("lang") or "zh").lower()
                     lg = "en" if lg.startswith("en") else "zh"
                     md = build_report(rows, sym, market, path_.name, lang=lg)
-                    out = ROOT / "reports" / report_filename(sym, lg)
+                    out = ROOT / "reports" / report_filename(sym, path_.name.split("_")[0], lg)
                     out.parent.mkdir(parents=True, exist_ok=True)
                     out.write_text(md, encoding="utf-8")
                     return self._send(200, json.dumps(

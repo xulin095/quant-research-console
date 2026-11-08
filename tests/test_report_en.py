@@ -50,9 +50,14 @@ class TestEnglishReport(unittest.TestCase):
         self.assertEqual(sorted(a), sorted(b), "中英文报告的数字不一致")
 
     def test_filename_per_language(self):
-        self.assertTrue(R.report_filename("600519", "zh").endswith(".md"))
-        self.assertIn("_分析报告_", R.report_filename("600519", "zh"))
-        self.assertIn("_report_", R.report_filename("600519", "en"))
+        zh = R.report_filename("600519", "cn", "zh")
+        en = R.report_filename("600519", "cn", "en")
+        self.assertTrue(zh.endswith(".md") and en.endswith(".md"))
+        self.assertIn("_分析报告_", zh)
+        self.assertIn("_report_", en)
+        # 文件名必须带市场，否则独立复核无法把报告和缓存对上
+        self.assertIn("_cn_", zh)
+        self.assertIn("_cn_", en)
 
     def test_short_data_english(self):
         md = R.build_report(rows(50), "SHORT", "us", lang="en")
