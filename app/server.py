@@ -20,7 +20,7 @@ r"""量化研究台 —— 后端 API（标准库，零依赖）。
     GET  /api/status           数据状态
     GET  /api/cache            缓存文件清单
     GET  /api/md?name=xxx.md   读取报告原文（白名单）
-    POST /api/run {id}         跑卡
+    POST /api/upload           上传自备 CSV（校验并落成标准表）\n    POST /api/run {id}         跑卡
     GET  /api/job/{job}        轮询任务
 
 启动
@@ -194,6 +194,90 @@ def read_md(name):
     return p.read_text(encoding="utf-8", errors="replace")
 
 
+# ---------------------------------------------------------------- 数据接入
+STD_COLS = ["date", "open", "high", "low", "close", "volume"]
+CN_MAP = {"日期": "date", "时间": "date", "开盘": "open", "最高": "high", "最低": "low",
+          "收盘": "close", "成交量": "volume", "成交额": "amount", "代码": "symbol"}
+MIN_ROWS = 60
+
+
+def _norm_header(h):
+    h = h.strip().strip('"').lower()
+    return CN_MAP.get(h, h)
+
+
+def ingest_csv(text, market, symbol, start=None, end=None):
+    """把用户上传的 CSV 变成项目标准表，并校验。
+
+    校验项（不满足就明确拒绝，不静默修补）：
+        · 必需列齐全（支持中文列名：日期/开盘/最高/最低/收盘/成交量）
+        · 日期可解析；重复日期去重并计数；乱序自动排序
+        · 价格必须为正（前复权长历史会出现负价，这是本项目踩过的坑）
+        · 至少 60 个交易日
+    返回 (ok, 信息字典)
+    """
+    import csv as _csv
+    import io
+    from datetime import datetime
+
+    if not market or not symbol:
+        return False, {"error": "必须填写 market 与 symbol"}
+    market = market.strip().lower()
+    symbol = symbol.strip().upper()
+    if market not in ("us", "cn", "crypto"):
+        return False, {"error": "market 只能是 us / cn / crypto"}
+
+    reader = _csv.reader(io.StringIO(text))
+    rows = list(reader)
+    if len(rows) < 2:
+        return False, {"error": "文件内容为空"}
+
+    header = [_norm_header(c) for c in rows[0]]
+    missing = [c for c in STD_COLS if c not in header]
+    if missing:
+        return False, {"error": "缺少列：" + "、".join(missing) +
+                                "（表头是：" + "、".join(rows[0]) + "）"}
+    idx = {c: header.index(c) for c in STD_COLS}
+
+    good, dropped_bad_price, seen, dup = [], 0, set(), 0
+    for r in rows[1:]:
+        if not r or len(r) <= max(idx.values()):
+            continue
+        try:
+            d = r[idx["date"]].strip()[:10]
+            datetime.strptime(d, "%Y-%m-%d")
+            o, h, l, c = (float(r[idx[k]]) for k in ("open", "high", "low", "close"))
+            v = float(r[idx["volume"]] or 0)
+        except (ValueError, IndexError):
+            continue
+        if min(o, h, l, c) <= 0:
+            dropped_bad_price += 1
+            continue
+        if d in seen:
+            dup += 1
+            continue
+        seen.add(d)
+        good.append((d, o, h, l, c, v))
+
+    if len(good) < MIN_ROWS:
+        return False, {"error": f"有效数据只有 {len(good)} 行，少于 {MIN_ROWS} 行",
+                       "dropped_bad_price": dropped_bad_price}
+
+    good.sort(key=lambda x: x[0])
+    d0, d1 = good[0][0], good[-1][0]
+    fname = f"{market}_{symbol}_{d0}_{d1}.csv"
+    path = ROOT / "data_cache" / fname
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lines = ["date,open,high,low,close,volume,symbol,market"]
+    for d, o, h, l, c, v in good:
+        lines.append(f"{d},{o},{h},{l},{c},{v},{symbol},{market}")
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+    return True, {"file": fname, "rows": len(good), "first": d0, "last": d1,
+                  "symbol": symbol, "market": market,
+                  "dedup": dup, "dropped_bad_price": dropped_bad_price,
+                  "hint": "已可被 tools.validate / cross_section / audit 直接使用"}
+
 # ---------------------------------------------------------------- 写操作
 def save_card(card):
     missing = [k for k in REQUIRED if not card.get(k)]
@@ -311,6 +395,11 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path == "/api/cards":
                 return self._send(200, json.dumps(save_card(payload), ensure_ascii=False))
+            if path == "/api/upload":
+                ok, info = ingest_csv(payload.get("content", ""), payload.get("market", ""),
+                                      payload.get("symbol", ""))
+                return self._send(200 if ok else 400,
+                                  json.dumps(dict(ok=ok, **info), ensure_ascii=False))
             if path == "/api/run":
                 cid = payload.get("id")
                 if not cid or not (CARDS / f"{cid}.json").exists():
