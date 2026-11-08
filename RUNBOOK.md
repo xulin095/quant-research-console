@@ -1,14 +1,14 @@
 # 操作手册（RUNBOOK）
 
 > 目标：把「一个想法」在两小时内变成「通过 / 不通过」的结论，并留下账。
-> 所有命令在 `D:\quant-agent` 下执行，用项目自己的解释器。
+> 所有命令在 `<项目根目录>` 下执行，用项目自己的解释器。
 
 ---
 
 ## 0. 每次开工前：30 秒环境自检
 
 ```powershell
-cd D:\quant-agent
+cd <项目根目录>
 .\.venv\Scripts\python.exe -m unittest discover -s tests -q
 ```
 
@@ -29,7 +29,7 @@ Get-ChildItem data_cache\*.csv | Measure-Object
 ### 30 分钟版：只跑已有卡，看账本
 
 ```powershell
-cd D:\quant-agent
+cd <项目根目录>
 type registry.jsonl
 ```
 
@@ -81,7 +81,7 @@ type registry.jsonl
 ## 3. 跑：一条命令
 
 ```powershell
-cd D:\quant-agent
+cd <项目根目录>
 .\.venv\Scripts\python.exe -m tools.audit cards\HK-003.json
 ```
 

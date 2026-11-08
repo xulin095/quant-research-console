@@ -214,11 +214,11 @@ Python **3.10+**（本机 `python` = 3.10.0，别写只在 3.11+ 才有的语法
 
 ## 4 验收标准
 
-**12 条主验收，每条对应一条裁判命令**（在 `C:\Users\lenovo\Documents\deepseek-harness\default-workspace\referee` 下跑，`--root D:\quant-agent`）：
+**12 条主验收，每条对应一条裁判命令**（在 `referee` 下跑，`--root <项目根目录>`）：
 
 | # | 标准（yes/no） | 怎么验证 |
 | --- | --- | --- |
-| 1 | 文件结构 16+2，无多余文件 | `python verify.py --root D:\quant-agent --only 1` |
+| 1 | 文件结构 16+2，无多余文件 | `python verify.py --root <项目根目录> --only 1` |
 | 2 | 报告存在且非空 | `--only 2` |
 | 3 | 报告 5 章标题一字不差 | `--only 3` |
 | 4 | 8 个禁词零命中 | `--only 4` |
@@ -238,7 +238,7 @@ Python **3.10+**（本机 `python` = 3.10.0，别写只在 3.11+ 才有的语法
 | 13 | 换市场不改核心 4 文件 | `--only 13`（git 无未提交改动）+ `main.py --market cn --symbol 600519` 真实跑通（A股直连可用）+ `python -m unittest discover -s tests -v` |
 
 > 第 13 条用**合成数据源**证明，不依赖真实网络（加密源可能被墙，不能拿它当验收前提）。
-> 全部跑：`python verify.py --root D:\quant-agent`；要真实联网验证再加 `--net`。
+> 全部跑：`python verify.py --root <项目根目录>`；要真实联网验证再加 `--net`。
 
 ## 5 边界与不做
 

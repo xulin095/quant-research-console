@@ -166,9 +166,8 @@ def results():
 def tools():
     out = []
     for rel, what, usage in TOOL_DOC:
-        p = (ROOT.parent / "referee" / p.name) if rel.startswith("referee/") else (ROOT / rel)
-        if rel.startswith("referee/"):
-            p = Path(r"C:\Users\lenovo\Documents\deepseek-harness\default-workspace") / rel
+        # referee/ 现在也在仓库里，统一按项目根目录解析（不再硬编码任何人的路径）
+        p = ROOT / rel
         lines = 0
         if p.is_file():
             lines = sum(1 for _ in p.open(encoding="utf-8", errors="replace"))

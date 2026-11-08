@@ -1,9 +1,9 @@
 # 量化分析 agent v1 质检报告
 
-- 质检对象：`D:\quant-agent`
+- 质检对象：`<项目根目录>`
 - 质检时间：2026-11-08
 - 质检角色：第 4/4 棒质检员（只测试、只记录，不改代码/不改设计/不改报告）
-- 解释器：`D:\quant-agent\.venv\Scripts\python.exe`
+- 解释器：`.venv\Scripts\python.exe`
 - 独立复算原则：复算脚本只读 `data_cache/` 原始 CSV，用手写公式重算，未 import 被测项目任何模块。
 
 ## 结论先行
@@ -17,7 +17,7 @@
 命令：
 
 ```powershell
-D:\quant-agent\.venv\Scripts\python.exe C:\Users\lenovo\Documents\deepseek-harness\default-workspace\referee\verify.py --root D:\quant-agent
+.venv\Scripts\python.exe referee\verify.py --root <项目根目录>
 ```
 
 退出码 0，原始输出：
@@ -70,8 +70,8 @@ PASS 13 / 13   FAIL 0   SKIP 0
 
 独立复算脚本只读取下列原始缓存，未 import 被测项目模块：
 
-- `D:\quant-agent\data_cache\cn_600519_2024-01-01_2025-12-31.csv`（484 行）
-- `D:\quant-agent\data_cache\us_AAPL_2024-01-01_2025-12-31.csv`（501 行）
+- `<项目根目录>\data_cache\cn_600519_2024-01-01_2025-12-31.csv`（484 行）
+- `<项目根目录>\data_cache\us_AAPL_2024-01-01_2025-12-31.csv`（501 行）
 
 复算所用公式（与 design.md 第 2.4 节口径一致）：
 
@@ -191,7 +191,7 @@ PASS 13 / 13   FAIL 0   SKIP 0
 
 ## 5. 边界实测表
 
-所有命令均在 `D:\quant-agent` 下执行，解释器为 `D:\quant-agent\.venv\Scripts\python.exe`。
+所有命令均在 `<项目根目录>` 下执行，解释器为 `.venv\Scripts\python.exe`。
 
 | 用例 | 命令关键参数 | 期望 | 实际退出码 | 实际输出/观察 | 判定 |
 | --- | --- | --- | --- | --- | --- |
