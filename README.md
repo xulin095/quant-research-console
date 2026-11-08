@@ -1,165 +1,195 @@
 [![tests](https://github.com/xulin095/quant-research-console/actions/workflows/ci.yml/badge.svg)](https://github.com/xulin095/quant-research-console/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
-# 量化研究台（Quant Research Console）
 
-> **一只股票值不值得继续研究？** 这个工具用规则来回答，而不是用感觉。
+# Quant Research Console
+
+**English** | [简体中文](README.zh-CN.md)
+
+> **Should I keep researching this stock?** This tool answers with rules, not gut feeling.
 >
-> 它不会告诉你买什么。它会告诉你：数据够不够用、这只票历史上是「顺着走」还是「来回摆」、
-> 以及你想到的那个方向到底有没有用——**过不了置信检验，它就直说「不知道」**。
+> It will not tell you what to buy. It tells you three things: whether the data is good enough
+> to trust, whether the stock has historically *trended* or *mean-reverted*, and whether the
+> idea you have is real — **or just noise that happens to look like a pattern.**
 
-> ⚠️ 研究工具，不构成投资建议。不预测价格，不承诺收益。
+> ⚠️ **Research instrument.** Not investment advice. No price predictions. No promised returns.
 
 ---
 
-## 界面
+## Screenshots
 
-| 概览：三步走完一个研究 | 数据分析：拉数据 + 看结构 |
+| Overview: three steps, one research cycle | Data: fetch by ticker, inspect structure |
 | --- | --- |
-| ![概览](docs/screenshots/overview.jpg) | ![数据分析](docs/screenshots/data.jpg) |
+| ![overview](docs/screenshots/overview.jpg) | ![data](docs/screenshots/data.jpg) |
 
-**分析报告**：选一只票，生成数据体检 / 结构判断 / 可试方向 / 已知风险的决策报告，可下载 .md。
+**Analysis report**: pick a ticker, get a report covering data health, structural verdict,
+directions worth testing, and known risks. Downloadable as Markdown.
 
-![分析报告](docs/screenshots/report.jpg)
+![report](docs/screenshots/report.jpg)
+
+*UI screenshots are in Chinese; an English UI is on the roadmap — see [Where I need help](#where-i-need-help).*
+
 ---
 
-## 它解决什么问题
+## The problem it solves
 
-大部分"量化"失败不是因为代码写错，而是因为**把噪声当成了规律**：
+Most "quant" projects fail for the same reasons, and none of them are bugs in the code:
 
-- 回测赚了 5%，但同期"买了不动"赚了 48% —— 这策略其实是负的
-- 12 只挑出来的名票上"动量有效"，扩到 59 只含跑输票后**效果消失** —— 那是幸存者偏差
-- 试了 12 组参数挑出最好的一组 —— 那不叫发现，叫搜索
+- A backtest returns +5%, while simply buying and holding the same stock returned +48%.
+  The strategy is **negative** — it just doesn't look like it.
+- Momentum "works" on the 12 famous stocks you picked. Widen the universe to 59 stocks
+  including the losers, and the effect **disappears**. That was survivorship bias.
+- You tried 12 parameter sets and kept the best one. That is not a discovery, it is a search.
 
-这个项目把这些坑做成了**机械检查**：每个结论要么过，要么不过，没有"基本满足"。
+This project turns those traps into **mechanical checks**. Every claim either passes or fails.
+There is no "mostly passes".
 
-## 核心判定口径
+## How a verdict is decided
 
-| 它比什么 | 不比"有没有赚钱"，比**跟买入持有相比多赚的那部分** |
+| What it compares | Not "did it make money", but **how much it beat buy-and-hold** |
 | --- | --- |
-| 怎么算过 | 超额收益的 95% 置信区间下界 **> 0**，且要求是**样本外**数据 |
-| 不通过怎么办 | 判不通过，**并冻结参数**，不许改一改再试 |
+| The bar | The 95% confidence interval of excess return must have a **lower bound > 0**, on **out-of-sample** data |
+| If it fails | It is recorded as a failure, the parameters are **frozen**, and you may not tweak and retry |
 
-## 快速开始
+## Quick start
 
-没有网络也能测：`samples/` 里有 3 份合成数据（趋势型 / 均值回归型 / 随机游走）
-和 2 份故意做脏的（缺成交量列、含负价格）。在「数据 → ③ 上传」里拖进去，
-就能跑通完整流程 —— 而且能看见它是否会安静地算错。
 ```bash
-# 1. 建环境（Windows 示例）
-uv venv .venv
-.venv\Scripts\activate
+python -m venv .venv
+.venv\Scripts\activate            # Windows
+# source .venv/bin/activate       # macOS / Linux
 pip install -r requirements.txt
 
-# 2. 启动本地网页控制台
-python -m app.server --open      # 或双击 启动研究台.bat
-# 浏览器打开 http://127.0.0.1:8765
+python -m app.server --open       # opens http://127.0.0.1:8765
 ```
 
-也可以纯命令行：
+Windows users can also double-click `启动研究台.bat` (it resolves its own directory).
+
+**No network? You can still test it.** `samples/` contains three synthetic series
+(trending / mean-reverting / random walk) and two deliberately broken files
+(missing volume column, negative prices). Drag them into the upload panel and the whole
+pipeline runs — which is exactly how you can check whether it fails *loudly* or
+**quietly computes the wrong thing**.
+
+Everything also works headless:
 
 ```bash
 python -m tools.fetch_basket --market cn --symbols 600519 --start 2015-01-01 --end 2025-12-31
-python -m tools.profile --symbol 600519          # 结构画像
-python -m tools.stock_report --symbol 600519     # 生成分析报告
-python -m tools.audit cards/HK-001.json          # 跑一次假设检验
+python -m tools.profile --symbol 600519          # structural profile
+python -m tools.stock_report --symbol 600519     # decision report
+python -m tools.audit cards/HK-001.json          # run one hypothesis test
 ```
 
-## 一次完整的研究流程
+## One research cycle
 
 ```
-① 拉数据   → 输入代码（600519 / 002541.SZ / AAPL），自动下载十年日线并检查质量
-② 看结构   → 趋势型 / 均值回归型 / 无明显结构（自相关 + 方差比 + 置换检验）
-③ 写假设   → 把判断写成一张卡（方向、回看月数、买前几名），**参数一经运行即冻结**
-④ 跑审计   → 用 2021 年之后的数据考一次，算「这个结果有多大概率是运气」
-⑤ 出报告   → 数据体检 / 结构判断 / 可试方向 / 已知风险 / 免责，可下载 .md
-⑥ 记账     → 每次检验都留档（失败的也记），因为「试过几次」决定显著性
+1. Fetch      Enter a ticker (AAPL / 600519 / 002541.SZ). Ten years of daily bars, quality-checked.
+2. Profile    Trending / mean-reverting / no structure — autocorrelation + variance ratio + permutation test.
+3. Hypothesize  Write the idea as a card (direction, lookback, how many names). Parameters freeze on run.
+4. Audit      Test it on data after 2021 only, and compute how likely the result is luck.
+5. Report     Data health / structural verdict / directions worth testing / risks / disclaimer. Downloadable.
+6. Log        Every run is recorded, failures included — because "how many times did you try" drives significance.
 ```
 
-## 目录结构
+## Layout
 
 ```
-app/            本地网页控制台（标准库 HTTP，零前端依赖）
-├─ server.py    API：拉数据 / 画像 / 报告 / 跑卡 / 术语
-└─ static/      单页前端（内联 CSS/JS，无构建步骤）
+app/            Local web console (stdlib HTTP server, zero frontend build step)
+├─ server.py    API: fetch / profile / report / run card / glossary
+└─ static/      Single-page UI (inline CSS/JS)
 
-tools/          研究工具（每个都能单独命令行跑）
-├─ validate.py       时序验证：walk-forward + deflated Sharpe + 块自助 CI
-├─ cross_section.py  截面验证：rank IC + 置信区间 + 扣成本回测
-├─ cs_audit.py       三重审计：邻域 / Bonferroni / 留出段
-├─ decide.py         决策层：规则表历史回放
-├─ profile.py        单标的结构画像（自相关 / 方差比 / 置换检验）
-├─ profile_all.py    批量画像
-├─ stock_report.py   生成单只股票的分析报告
-├─ universe.py       诚实宇宙：含退市样本抽样 + 覆盖率量化
-├─ audit.py          统一入口：卡片 → 判定 → 追加记账
-└─ fetch_basket.py   批量拉数据
+tools/          Research tooling (each runs standalone on the CLI)
+├─ validate.py       Time-series: walk-forward + deflated Sharpe + block-bootstrap CI
+├─ cross_section.py  Cross-section: rank IC + confidence interval + cost-aware backtest
+├─ cs_audit.py       Triple audit: lookback neighbourhood / Bonferroni / holdout
+├─ decide.py         Decision layer: rule-table replay
+├─ profile.py        Single-ticker structural profile (autocorr / variance ratio / permutation)
+├─ profile_all.py    Batch profiling
+├─ stock_report.py   Per-ticker analysis report
+├─ universe.py       Honest universe: delisted sampling + coverage measurement
+├─ audit.py          Single entry point: card → verdict → append-only log
+└─ fetch_basket.py   Batch fetch
 
-data/           数据源适配器（可插拔，注册表在 data/registry.py）
-referee/        独立裁判（不 import 项目代码，专门用来验项目自己）
-cards/          假设卡（每个假设一份，参数冻结）
-tests/          126 个测试
+data/           Pluggable source adapters (registry in data/registry.py)
+referee/        Independent referees (deliberately do NOT import project code)
+cards/          Hypothesis cards (one per idea, parameters frozen)
+tests/          132 tests
 ```
 
-## 已验证的结论（诚实版）
+## What has actually been tested (honest edition)
 
-四条路径都试过，**没有一条通过**：
+Four approaches, **none of them passed**:
 
-| 路径 | 样本 | 结果 |
+| Approach | Sample | Result |
 | --- | --- | --- |
-| 时序双均线择时 | 15 只 | 0 个有超额证据；11 个显著跑输买入持有 |
-| 决策规则层 | 10 只 | 0 个通过；平均仓位 0.0–0.3%，几乎不下注 |
-| 截面动量 | 59 只美股 | 0 个回看期显著（12 只名票上曾是 IC=+0.063，扩样本后消失） |
-| 截面反转（预注册 HK-001） | 42 只 A 股（含 11 只退市） | 不通过；发现后校正 p=0.987 |
+| Time-series MA crossover timing | 15 tickers | No excess-return evidence; 11 significantly *underperformed* buy-and-hold |
+| Decision rule layer | 10 tickers | 0 passed; average position 0.0–0.3% — it barely traded |
+| Cross-sectional momentum | 59 US tickers | 0 of 12 lookbacks significant (IC=+0.063 on 12 famous names; vanished when widened) |
+| Cross-sectional reversal (pre-registered HK-001) | 42 A-shares incl. 11 delisted | Failed; discovery-adjusted p=0.987 |
 
-**这不是失败，是这个工具的用途：它替你把学费省下来了。**
+**This is not a failure. It is the product working. It saved you the tuition.**
 
-## 怎么验证它没骗你
+## How to verify it is not lying to you
 
 ```bash
-# 独立复算：不 import 项目代码，自己从 CSV 重算，再和报告对账
+# Independent recompute: does NOT import project code, re-derives everything from the CSV,
+# then reconciles the numbers against the generated report.
 python referee/profile_check.py \
-  --csv data_cache/cn_600519_2015-01-01_2025-12-31.csv \
+  --csv data_cache/cn_600519_2020-01-01_2025-12-31.csv \
   --report reports/600519_分析报告_2026-11-08.md
 ```
 
-退出码 0 = 一致，1 = 有对不上的。用它验过一次**故意篡改的报告**，它确实会报不一致。
+Exit code 0 means the report matches an independent recomputation; 1 means it does not.
+It was validated against a **deliberately tampered report**, and it did flag the mismatch.
 
-## 已知限制
+## Known limitations
 
-- **只有日线**，不做分钟级；**只有单标的表**，一个 CSV 一只票
-- **免费数据拿不到退市票**：美股实测 14 只退市股 0 只可取，A 股约 70% 可取 → 幸存者偏差无法彻底消除
-- **A 股长历史必须用后复权**（前复权在高分红股上会算出负价格，本项目踩过）
-- 未模拟涨跌停、停牌、T+1 对成交的限制；成本按单边 0.08% 估算
-- 结构画像的「判定」依赖置换检验，换随机种子会小幅波动，因此只承诺**判定一致**，不承诺小数点一致
+- **Daily bars only**, one ticker per CSV. No intraday, no order book.
+- **Delisted tickers are mostly unavailable for free**: 0 of 14 delisted US tickers were retrievable,
+  roughly 70% of delisted A-shares were. Survivorship bias cannot be fully removed with free data.
+- **A-shares need back-adjusted prices** (`hfq`) for long history. Forward adjustment (`qfq`)
+  can produce *negative* prices on high-dividend names — this project hit that bug.
+- No modelling of limit-up / limit-down, trading halts, or T+1 constraints on fills.
+  Costs are estimated at 0.08% per side.
+- The structural verdict depends on a permutation test, so its z-score moves slightly with the
+  random seed. The guarantee is **verdict-level agreement**, not decimal agreement.
+- **The UI is Chinese-only** (see below).
 
-## 想找人帮忙的事
-
-这个项目目前最缺的不是代码，是**外部视角**。以下按价值排序：
-
-1. **换个市场跑一遍**。现在的结论全部来自 A 股 + 美股日线。港股、期货、ETF 的结构画像是空白。
-2. **喂它脏数据**。停牌缺失、除权断口、成交量单位错、日期乱序 —— 想看看它在什么情况下会「安静地算错」。
-3. **证伪我的判断**。`ROADMAP-v2.md` 里写着四条路径为什么失败，如果你认为其中某条其实有机会，请写一张卡来跑，而不是只是说。
-4. **英文界面**。现在整套界面是中文，非中文使用者用不了。这是纯工作量。
-
-## 参与方式
-
-看 [CONTRIBUTING.md](CONTRIBUTING.md)。里面有：怎么跑测试、报 bug 要带什么、以及**哪些改动我不会合并**（比如降低判定门槛）。
-## 测试
+## Tests
 
 ```bash
-python -m unittest discover -s tests -v     # 128 个用例
+python -m unittest discover -s tests -v     # 132 cases
 ```
 
-测试**只需要 pandas / numpy**：`yfinance`、`akshare`、`requests` 都在函数内部延迟导入，
-所以没装数据源也能跑测试（`tests/test_import_hygiene.py` 会守住这条）。
+The suite needs **only pandas and numpy**: `yfinance`, `akshare` and `requests` are imported
+lazily inside functions, so you can run the tests without any data-source package installed
+(enforced by `tests/test_import_hygiene.py`).
 
-覆盖：市场与代码匹配（防止 A 股代码被当成美股）、代码归一化（002541.SZ → 002541）、
-报告五章齐全与禁词为零、脏数据识别、随机游走不得被判出结构、前端 JS 语法等。
+Covered: market/ticker compatibility (an A-share code must not be fetched as a US ticker),
+ticker normalisation (`002541.SZ` → `002541`), report section completeness and banned phrases,
+dirty-data detection, "a random walk must not be classified as a trend", frontend JS syntax,
+and no hard-coded personal paths anywhere in the repo.
 
-## 免责声明
+## Where I need help
 
-本工具是研究仪器，输出的是**历史描述与统计显著性检验结果**，
-不构成投资建议、不预测价格、不承诺收益。
+What this project lacks is not code, it is **outside eyes**. In order of value:
 
-本报告只代表过去，不代表未来。不要用实盘资金直接照抄。
+1. **Run it on a different market.** Every conclusion so far comes from A-share and US daily bars.
+   Hong Kong, futures, ETFs are entirely untested.
+2. **Feed it dirty data.** Missing days, split discontinuities, wrong volume units, unsorted dates —
+   I want to know the cases where it **fails silently**.
+3. **Falsify my conclusions.** `ROADMAP-v2.md` explains why four approaches failed.
+   If you think one of them actually has an edge, write a card and run it — don't just say so.
+4. **English UI.** The interface is Chinese-only. This is pure grunt work and very welcome.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) — how to run the tests, what to include in a bug report,
+and **which changes I will reject** (for example, lowering the significance threshold).
+
+## Disclaimer
+
+This tool is a research instrument. It outputs historical descriptions and the results of
+statistical significance tests. It does not constitute investment advice, does not predict prices,
+and does not promise returns.
+
+It describes the past, not the future. Do not trade real money off it.

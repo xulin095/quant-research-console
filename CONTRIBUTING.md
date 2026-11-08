@@ -1,8 +1,9 @@
-# 怎么参与
+# Contributing
 
-欢迎试用、报 bug、提改进。这个项目的规矩比一般项目多一点，写在下面，省得你白做功。
+Thanks for trying this out. This project has more rules than most, and they are written down
+here so you don't waste effort on a change I will not merge.
 
-## 一、先把项目跑起来
+## 1. Get it running
 
 ```bash
 python -m venv .venv
@@ -10,62 +11,66 @@ python -m venv .venv
 # source .venv/bin/activate     # macOS / Linux
 pip install -r requirements.txt
 
-python -m unittest discover -s tests -v     # 应该 128 个用例全绿
-python -m app.server --open                 # 打开网页控制台
+python -m unittest discover -s tests -v     # expect 132 passing
+python -m app.server --open                 # opens http://127.0.0.1:8765
 ```
 
-**跑测试不需要 yfinance / akshare / requests**（它们只在真拉数据时导入）。
-如果 pip 装 akshare 失败，你可以跳过它，测试照样能跑。
+**The test suite does not need yfinance, akshare or requests** — they are imported lazily, only
+when you actually fetch data. If `pip install akshare` fails on your machine, skip it; the tests
+still run.
 
-## 二、报 bug 时请带上这些
+## 2. What to include in a bug report
 
-没有这些信息，多半只能猜：
+Without these I can only guess:
 
-1. **你跑了什么**（完整命令，或网页上点了哪几个按钮、填了什么）
-2. **期望什么 vs 实际什么**
-3. **报错原文**（终端输出或浏览器 F12 → Console 的红字）
-4. 如果和数据有关：**数据文件的前 3 行**（`date,open,...` 那段）以及市场、代码
-5. Python 版本、操作系统
+1. **What you ran** (full command, or which buttons you clicked and what you entered)
+2. **Expected vs actual**
+3. **The raw error** (terminal output, or F12 → Console in the browser)
+4. If it is data-related: **the first 3 lines of the CSV**, plus market and ticker
+5. Python version and OS
 
-## 三、提改进时请守住这几条
+## 3. Rules for changes
 
-### 1. 不许出现投资建议类表述
+### 3.1 No investment-advice phrasing
 
-代码、注释、报告、网页文案里都不许有：
-`建议买入` / `建议卖出` / `推荐` / `看好` / `一定涨` / `一定跌` / `目标价` / `值得买`
+Code, comments, reports and UI copy must not contain phrases equivalent to
+"buy recommendation", "sell recommendation", "target price", "guaranteed to rise/fall".
+`tests/test_stock_report.py` enforces this on generated reports. It is a hard rule, not a style preference.
 
-`tests/test_stock_report.py` 会检查报告里的禁词；这是一条硬规则，不是风格偏好。
+### 3.2 Market and ticker must match
 
-### 2. 市场与代码必须匹配
+`002541.SZ` is an A-share ticker. Hand it to the "US" fetcher and Yahoo will happily return it
+(Shenzhen tickers use exactly that suffix), so you end up with A-share data labelled `us` —
+the data is real, the label is fake, and the report lies.
 
-`002541.SZ` 是 A 股代码。如果把它丢给「美股」去拉，Yahoo 会照单全收（深市代码在 Yahoo 就是这种写法），
-结果是 A 股数据被打上 us 标签 —— 数据是对的，标签是假的，报告会撒谎。
+Locked down by `app/server.py::market_mismatch` and `tests/test_market_match.py`.
 
-`app/server.py::market_mismatch` 与 `tests/test_market_match.py` 锁住了这条。
+### 3.3 Do not relax the verdict
 
-### 3. 判定口径不许放宽
+The bar is: **the 95% confidence interval of excess return over buy-and-hold has a lower bound > 0,
+on out-of-sample data.**
 
-通过的条件是：**超额收益（相对买入持有）的 95% 置信区间下界 > 0，且在样本外数据上成立**。
+If you want to test a new idea, write a new card (`cards/*.json`) with its mechanism and parameters,
+run it once, and report the result. **Do not change parameters and re-run until it passes** —
+that is re-rolling the exam and it corrupts every downstream significance claim.
 
-想加新策略，就新建一张卡（`cards/*.json`）写清机制与参数，跑一次看结果；
-**不许因为没过就改参数重跑** —— 那等于换一道题，会污染显著性判断。
+### 3.4 Data sources must stay pluggable
 
-### 4. 数据源必须是插拔式的
+To add a market (Hong Kong, futures, ...), implement `DataFetcher` from `data/base.py` and register
+it in `data/registry.py`. Import third-party libraries **inside functions**, never at module level
+(`tests/test_import_hygiene.py` will catch it).
 
-新增市场（比如港股、期货）请实现 `data/base.py` 的 `DataFetcher`，
-然后在 `data/registry.py` 注册。第三方库请**在函数内导入**，不要放在文件顶部
-（`tests/test_import_hygiene.py` 会拦住）。
-
-## 四、跑测试之外，还能这样验证自己没改坏
+## 4. Verifying your own change
 
 ```bash
-# 独立复核器：不 import 项目代码，自己重算一遍再对账
+# Independent referee: re-derives the numbers without importing project code
 python referee/profile_check.py --csv data_cache/cn_600519_2020-01-01_2025-12-31.csv
 ```
 
-## 五、我不会合并的改动
+## 5. Changes I will not merge
 
-- 加更多技术指标（MACD / KDJ / 布林带）却没说明为什么现有证据不足
-- 把「通过」的门槛从 95% 降低，或改成比「绝对收益 > 0」
-- 在回测里用未来数据（例如用当天的收盘价决定当天开盘就买）
-- 只在小样本（少于 10 只票）上就宣布某策略有效
+- More technical indicators (MACD / KDJ / Bollinger) without explaining why the existing evidence
+  is insufficient
+- Lowering the pass threshold from 95%, or replacing "excess over buy-and-hold" with "absolute return > 0"
+- Any look-ahead bias in the backtest (e.g. using today's close to decide a fill at today's open)
+- Declaring a strategy valid on a sample of fewer than 10 tickers

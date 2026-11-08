@@ -1,31 +1,31 @@
 ---
-name: Bug 报告
-about: 跑不通、数字不对、页面白屏
+name: Bug report
+about: It does not run, numbers look wrong, page is blank
 title: "[bug] "
 labels: bug
 ---
 
-## 你做了什么
+## What did you do
 
-（完整命令，或点了哪几个按钮、填了什么市场与代码）
+(Full command, or which buttons you clicked and what market / ticker you entered)
 
-## 期望什么
+## What did you expect
 
-## 实际什么
+## What actually happened
 
-## 报错原文
+## Raw error
 
 ```
-（终端输出，或浏览器 F12 → Console 的红字）
+(terminal output, or browser F12 -> Console)
 ```
 
-## 环境
+## Environment
 
-- 操作系统：
-- Python 版本：`python -V`
-- 数据市场与代码（如果相关）：
+- OS:
+- Python version (`python -V`):
+- Market and ticker (if relevant):
 
-## 数据前 3 行（如果和某份数据有关）
+## First 3 lines of the data (if relevant)
 
 ```
 date,open,high,low,close,volume

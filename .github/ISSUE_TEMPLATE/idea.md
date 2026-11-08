@@ -1,19 +1,19 @@
 ---
-name: 改进建议
-about: 想加市场、改判定、改界面
+name: Idea
+about: New market, different verdict rule, UI change
 title: "[idea] "
 labels: enhancement
 ---
 
-## 你想改什么
+## What do you want to change
 
-## 为什么（它解决了什么具体问题）
+## Why (what concrete problem does it solve)
 
-## 会不会影响判定口径
+## Does it affect the verdict rule
 
-（是否改变「通过」的标准？如果会，请说明为什么该改）
+(Does it change what "pass" means? If yes, argue why it should change.)
 
-## 你能自己提 PR 吗
+## Can you open a PR yourself
 
-- [ ] 可以
-- [ ] 需要指路
+- [ ] Yes
+- [ ] I need guidance
