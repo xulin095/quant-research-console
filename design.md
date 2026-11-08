@@ -74,6 +74,23 @@ def get_fetcher(market: str) -> DataFetcher:
 - `cn`：akshare `adjust="qfq"` 前复权；缓存要记录拉取日期（前复权价是时变的，除权后需重拉）；
 - `crypto`：无复权概念，原始成交价；日线按 UTC 00:00 切分。
 
+**网络策略（2026-11-08 本机实测，必须按市场分开设，一个开关搞不定）**
+
+| 市场 | 通路 | 实测证据 |
+| --- | --- | --- |
+| `us` | **必须走代理** | Yahoo 直连 429/403；走 `127.0.0.1:7897` 成功拉到 AAPL 41 行 |
+| `cn` | **必须绕过代理** | 系统注册表代理开着 7897，会拒绝东财请求（ProxyError）；绕过代理后 600519 返回 38 行 |
+| `crypto` | 当前不可达 | Binance 直连超时、走代理 SSLError。代码照写，实测标「未验证」，不得因此判 v1 失败 |
+
+实现要求（否则第 3 棒的 5 条验收永远是 SKIP）：
+- `config.py` 增加 `PROXY = os.environ.get("QUANT_PROXY", "")`（空串 = 不用代理）
+- `main.py` 启动时先 `os.environ.setdefault("NO_PROXY", "*")` 与 `setdefault("no_proxy", "*")`，
+  让 requests / akshare 默认**绕过**系统注册表代理（Windows 上 requests 会读注册表，这是东财失败的真凶）
+- `data/us.py`：yfinance 1.8 **没有 `proxy` 参数**，所以调用前若 `PROXY` 非空 → 临时设
+  `HTTPS_PROXY`/`HTTP_PROXY` 并临时清掉 `NO_PROXY`，**用 try/finally 恢复原值**（别污染其它市场）
+- `data/crypto.py`：显式 `requests.Session()` + `session.trust_env = False`；`PROXY` 非空则传 `proxies=`
+- 标准跑法：`$env:QUANT_PROXY='http://127.0.0.1:7897'` 之后再跑 `main.py`
+- README「已知限制」必须写明这三条通路差异
 **缓存**（不做 meta.json，口径靠文件名字段+报告声明）
 - 路径：`data_cache/{market}_{symbol}_{start}_{end}.csv`，symbol 大写
 - 命中条件：文件存在且**数据行 ≥ 60**
@@ -176,7 +193,7 @@ Python **3.10+**（本机 `python` = 3.10.0，别写只在 3.11+ 才有的语法
 | `reports/.gitkeep` | 占位 |
 | `data_cache/.gitkeep` | 占位 |
 
-`config.py` 必须包含：`CAPITAL=100000`、`FAST=5`、`SLOW=20`、`LONG=60`、`MACD=(12,26,9)`、`RSI_N=14`、`FEE=0.0003`、`SLIP=0.0005`、`RF=0.02`、`TRADING_DAYS=252`、`MIN_ROWS=60`、`VOL_N=20`。
+`config.py` 必须包含：`CAPITAL=100000`、`FAST=5`、`SLOW=20`、`LONG=60`、`MACD=(12,26,9)`、`RSI_N=14`、`FEE=0.0003`、`SLIP=0.0005`、`RF=0.02`、`TRADING_DAYS=252`、`MIN_ROWS=60`、`VOL_N=20`、`PROXY=os.environ.get("QUANT_PROXY","")`。
 
 ### 3.3 实现顺序（每步跑通才进下一步）
 
@@ -211,7 +228,7 @@ Python **3.10+**（本机 `python` = 3.10.0，别写只在 3.11+ 才有的语法
 
 | # | 标准 | 怎么验证 |
 | --- | --- | --- |
-| 13 | 换市场不改核心 4 文件 | `--only 13`（git 无未提交改动）+ `python -m unittest discover -s tests -v` |
+| 13 | 换市场不改核心 4 文件 | `--only 13`（git 无未提交改动）+ `main.py --market cn --symbol 600519` 真实跑通（A股直连可用）+ `python -m unittest discover -s tests -v` |
 
 > 第 13 条用**合成数据源**证明，不依赖真实网络（加密源可能被墙，不能拿它当验收前提）。
 > 全部跑：`python verify.py --root D:\quant-agent`；要真实联网验证再加 `--net`。
