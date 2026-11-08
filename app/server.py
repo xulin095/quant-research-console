@@ -60,7 +60,7 @@ TOOL_DOC = [
     ("tools/universe.py", "诚实宇宙：含退市样本抽样 + 覆盖率量化", "python -m tools.universe --sample 45"),
     ("tools/prereg_reversal.py", "预注册卡 HK-001 的单次检验", "python -m tools.prereg_reversal"),
     ("tools/fetch_basket.py", "批量拉数据落缓存", "python -m tools.fetch_basket --market us --symbols ..."),
-    ("referee/verify.py", "13 条机械验收（独立于项目代码）", "python referee/verify.py --root D:\\quant-agent"),
+    ("referee/verify.py", "13 条机械验收（独立于项目代码）", "python referee/verify.py --root ."),
 ]
 
 
