@@ -2,105 +2,181 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<title>量化研究控制台</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>量化研究台</title>
 <style>
-  :root{--bg:#0f1115;--card:#171a21;--line:#262b36;--fg:#e6e9ef;--dim:#8b93a3;
-        --pass:#25c26e;--fail:#e5484d;--warn:#f5a524;--acc:#4a90e2}
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--fg);
-       font:14px/1.6 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
-  header{padding:16px 22px;border-bottom:1px solid var(--line);display:flex;
-         align-items:center;gap:14px;flex-wrap:wrap}
-  h1{font-size:16px;margin:0;font-weight:600}
-  .disc{color:var(--warn);font-size:12px;border:1px solid rgba(245,165,36,.35);
-        padding:2px 8px;border-radius:20px}
-  .chips{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
-  .chip{background:var(--card);border:1px solid var(--line);border-radius:6px;
-        padding:4px 10px;font-size:12px;color:var(--dim)}
-  .chip b{color:var(--fg)}
-  nav{display:flex;gap:4px;padding:10px 22px 0}
-  nav button{background:none;border:none;color:var(--dim);padding:8px 14px;
-             cursor:pointer;font-size:14px;border-bottom:2px solid transparent}
-  nav button.on{color:var(--fg);border-bottom-color:var(--acc)}
-  main{padding:18px 22px 60px;max-width:1180px}
-  .panel{display:none}.panel.on{display:block}
-  .box{background:var(--card);border:1px solid var(--line);border-radius:10px;
-       padding:16px;margin-bottom:14px}
-  .box h2{font-size:13px;margin:0 0 12px;color:var(--dim);font-weight:600;
-          letter-spacing:.04em;text-transform:uppercase}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);
-        vertical-align:top}
-  th{color:var(--dim);font-weight:500;font-size:12px}
-  tr:last-child td{border-bottom:none}
-  .badge{display:inline-block;padding:1px 8px;border-radius:4px;font-size:12px;
-         font-weight:600}
-  .badge.pass{background:rgba(37,194,110,.15);color:var(--pass)}
-  .badge.fail{background:rgba(229,72,77,.15);color:var(--fail)}
-  .badge.err{background:rgba(245,165,36,.15);color:var(--warn)}
-  .mono{font-family:ui-monospace,Consolas,monospace;font-size:12px}
-  .muted{color:var(--dim);font-size:12px}
-  input,select,textarea{background:#0b0d11;border:1px solid var(--line);
-        color:var(--fg);border-radius:6px;padding:7px 9px;font-size:13px;width:100%}
-  label{display:block;font-size:12px;color:var(--dim);margin:10px 0 4px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
-  button.act{background:var(--acc);color:#fff;border:none;border-radius:6px;
-        padding:8px 16px;cursor:pointer;font-size:13px}
-  button.act:disabled{opacity:.45;cursor:not-allowed}
-  button.ghost{background:none;border:1px solid var(--line);color:var(--fg);
-        border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px}
-  pre{background:#0b0d11;border:1px solid var(--line);border-radius:8px;
-      padding:12px;overflow:auto;font-size:12px;max-height:340px;margin:0}
-  .verdict{font-size:22px;font-weight:700;margin:6px 0}
-  .nums{display:flex;gap:22px;flex-wrap:wrap;margin-top:8px}
-  .num{min-width:110px}
-  .num .k{font-size:11px;color:var(--dim)}
-  .num .v{font-size:18px;font-family:ui-monospace,Consolas,monospace}
-  .hint{color:var(--dim);font-size:12px;margin-top:10px;line-height:1.7}
+:root{
+ --bg:#0d1014;--panel:#151a21;--panel2:#1b212a;--line:#252d38;--fg:#e8ecf1;
+ --dim:#8b97a8;--dim2:#5d6878;--pass:#2ecc71;--fail:#f0555a;--warn:#f0b429;
+ --acc:#5b9dff;--neg:#f0555a;--pos:#2ecc71;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.65 -apple-system,
+ "Segoe UI","Microsoft YaHei",system-ui,sans-serif;display:flex}
+aside{width:210px;flex:0 0 210px;border-right:1px solid var(--line);
+ background:var(--panel);display:flex;flex-direction:column;padding:18px 0}
+.brand{padding:0 20px 16px;border-bottom:1px solid var(--line);margin-bottom:10px}
+.brand h1{font-size:15px;margin:0;letter-spacing:.02em}
+.brand p{margin:6px 0 0;font-size:11px;color:var(--dim2)}
+nav a{display:flex;align-items:center;gap:10px;padding:9px 20px;color:var(--dim);
+ text-decoration:none;font-size:13.5px;border-left:2px solid transparent;cursor:pointer}
+nav a:hover{color:var(--fg);background:rgba(255,255,255,.02)}
+nav a.on{color:var(--fg);background:rgba(91,157,255,.09);border-left-color:var(--acc)}
+nav a .dot{width:6px;height:6px;border-radius:50%;background:var(--dim2)}
+nav a.on .dot{background:var(--acc)}
+.side-foot{margin-top:auto;padding:14px 20px;font-size:11px;color:var(--dim2);
+ border-top:1px solid var(--line);line-height:1.7}
+main{flex:1;overflow:auto;padding:26px 30px 60px;max-width:1280px}
+.view{display:none}.view.on{display:block}
+h2.page{font-size:19px;margin:0 0 4px}
+.sub{color:var(--dim);font-size:13px;margin:0 0 22px}
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.g2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.box h3{margin:0 0 12px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;
+ color:var(--dim2);font-weight:600}
+.stat .k{font-size:12px;color:var(--dim)}
+.stat .v{font-size:26px;font-weight:650;margin-top:4px;font-variant-numeric:tabular-nums}
+.stat .n{font-size:11.5px;color:var(--dim2);margin-top:2px}
+.banner{display:flex;gap:16px;align-items:center;background:linear-gradient(90deg,
+ rgba(240,85,90,.12),rgba(240,85,90,.02));border:1px solid rgba(240,85,90,.3);
+ border-radius:10px;padding:16px 20px;margin-bottom:18px}
+.banner .big{font-size:30px;font-weight:700;color:var(--fail);font-variant-numeric:tabular-nums}
+.banner .txt{font-size:13px;color:var(--dim);line-height:1.6}
+.banner .txt b{color:var(--fg)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--dim2);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em}
+tr:last-child td{border-bottom:none}
+td.num,.mono{font-family:ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums}
+.badge{display:inline-block;padding:1.5px 9px;border-radius:20px;font-size:11.5px;font-weight:600}
+.badge.pass{background:rgba(46,204,113,.14);color:var(--pass)}
+.badge.fail{background:rgba(240,85,90,.14);color:var(--fail)}
+.badge.err{background:rgba(240,180,41,.14);color:var(--warn)}
+.badge.mut{background:rgba(139,151,168,.14);color:var(--dim)}
+.role{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.role .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.role .r{font-size:15px;font-weight:650}
+.role .ag{font-size:11.5px;color:var(--dim2);margin-top:2px}
+.role .what{font-size:13px;color:var(--dim);margin:8px 0}
+.role .key{font-size:12.5px;color:var(--fg);background:var(--panel2);border-radius:6px;
+ padding:9px 11px;line-height:1.55}
+.role .meta{margin-top:10px;font-size:11.5px;color:var(--dim2);display:flex;gap:12px}
+input,select,textarea{background:#0a0d11;border:1px solid var(--line);color:var(--fg);
+ border-radius:7px;padding:8px 10px;font-size:13px;width:100%;font-family:inherit}
+label{display:block;font-size:11.5px;color:var(--dim2);margin:11px 0 5px;
+ text-transform:uppercase;letter-spacing:.05em}
+button.act{background:var(--acc);color:#fff;border:none;border-radius:7px;padding:9px 18px;
+ cursor:pointer;font-size:13px;font-weight:500}
+button.act:disabled{opacity:.45;cursor:not-allowed}
+button.ghost{background:none;border:1px solid var(--line);color:var(--fg);border-radius:7px;
+ padding:5px 12px;cursor:pointer;font-size:12px}
+button.ghost:hover{border-color:var(--acc);color:var(--acc)}
+pre{background:#0a0d11;border:1px solid var(--line);border-radius:8px;padding:13px;
+ overflow:auto;font-size:12px;max-height:380px;margin:0;line-height:1.6}
+.nums{display:flex;gap:26px;flex-wrap:wrap;margin:10px 0 4px}
+.nums .n{min-width:96px}
+.nums .n .k{font-size:11px;color:var(--dim2)}
+.nums .n .v{font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
+.verdict{font-size:24px;font-weight:700;margin:2px 0}
+.hint{font-size:12px;color:var(--dim2);line-height:1.7;margin-top:10px}
+.tl{list-style:none;margin:0;padding:0}
+.tl li{position:relative;padding:0 0 15px 22px;font-size:13px;color:var(--dim)}
+.tl li:before{content:'';position:absolute;left:5px;top:7px;width:7px;height:7px;
+ border-radius:50%;background:var(--dim2)}
+.tl li.ok:before{background:var(--pass)}
+.tl li.bad:before{background:var(--fail)}
+.tl li:after{content:'';position:absolute;left:8px;top:16px;bottom:0;width:1px;
+ background:var(--line)}
+.tl li:last-child:after{display:none}
+.tl .d{color:var(--fg);font-weight:600;margin-right:8px}
+.md{font-size:13.5px;line-height:1.8}
+.md h1,.md h2,.md h3{margin:22px 0 10px;line-height:1.35}
+.md h1{font-size:20px}.md h2{font-size:17px}.md h3{font-size:15px;color:var(--dim)}
+.md table{margin:12px 0}
+.md code{background:#0a0d11;border:1px solid var(--line);border-radius:4px;
+ padding:1px 5px;font-size:12px;font-family:ui-monospace,Consolas,monospace}
+.md pre code{border:none;background:none;padding:0}
+.md blockquote{border-left:3px solid var(--acc);margin:12px 0;padding:6px 14px;
+ color:var(--dim);background:rgba(91,157,255,.05)}
+.md hr{border:none;border-top:1px solid var(--line);margin:20px 0}
+.loading{color:var(--dim2);font-size:13px}
+.flex{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+select.w{width:auto;min-width:220px}
 </style>
 </head>
 <body>
-<header>
-  <h1>量化研究控制台</h1>
-  <span class="disc">研究工具，不构成投资建议</span>
-  <div class="chips" id="chips"></div>
-</header>
-
-<nav>
-  <button class="on" data-tab="cards">卡片</button>
-  <button data-tab="ledger">账本</button>
-  <button data-tab="data">数据</button>
-</nav>
-
+<aside>
+  <div class="brand"><h1>量化研究台</h1><p>研究工具 · 不构成投资建议</p></div>
+  <nav id="nav"></nav>
+  <div class="side-foot" id="sideFoot"></div>
+</aside>
 <main>
-  <section class="panel on" id="p-cards">
-    <div class="box">
-      <h2>已有假设卡</h2>
-      <table id="cardTable"><thead><tr>
-        <th>编号</th><th>类型</th><th>方向</th><th>回看</th><th>选股数</th>
-        <th>机制</th><th></th></tr></thead><tbody></tbody></table>
-    </div>
 
-    <div class="box" id="runBox" style="display:none">
-      <h2>运行结果</h2>
-      <div id="runVerdict" class="verdict"></div>
+  <section class="view on" id="v-overview">
+    <h2 class="page">概览</h2>
+    <p class="sub" id="ovSub">加载中…</p>
+    <div class="banner" id="ovBanner"></div>
+    <div class="grid g4" id="ovStats"></div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="box"><h3>研究时间线</h3><ul class="tl" id="ovTimeline"></ul></div>
+      <div class="box"><h3>结论</h3><div id="ovConclusion" style="font-size:13.5px;line-height:1.8"></div></div>
+    </div>
+  </section>
+
+  <section class="view" id="v-pipeline">
+    <h2 class="page">四棒流水线</h2>
+    <p class="sub">研究员 → 架构师 → 开发者 → 质检员。每棒的产物都是真实文件，体量为实测。</p>
+    <div class="grid g2" id="plRoles"></div>
+    <div class="box" style="margin-top:14px">
+      <h3>为什么这样分工</h3>
+      <div class="hint" style="font-size:13px;color:var(--dim)">
+        关键不是「谁更强」，而是<b style="color:var(--fg)">让下游看不到上游的借口</b>：
+        一棒一会话、交接只通过文件、质检员禁止与开发者同源。
+        第 4 棒抓到 8 个问题，其中「裁判把字符数标成字节」这类缺陷，
+        只有独立审查才发现得了。
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="v-paths">
+    <h2 class="page">四条路径的实测结论</h2>
+    <p class="sub">每条都经过 walk-forward / 留出段 / 多重检验。判定口径：超额收益置信区间下界 &gt; 0。</p>
+    <div class="box"><h3>路径判定</h3><table id="pathTable"></table></div>
+    <div class="box" style="margin-top:14px">
+      <h3 id="icTitle">截面 IC 曲线</h3>
+      <div id="icChart"></div>
+      <div class="hint" id="icHint"></div>
+    </div>
+    <div class="box" style="margin-top:14px"><h3>决策层回放</h3><table id="decTable"></table>
+      <div class="hint">「平均仓位」越低说明估计器越不认为有优势。决策层只能决定下多少，不能创造优势。</div>
+    </div>
+  </section>
+
+  <section class="view" id="v-cards">
+    <h2 class="page">假设卡</h2>
+    <p class="sub">一张卡 = 一个冻结的假设。参数一经运行不可修改，想试新参数请新建卡。</p>
+    <div class="box"><h3>已有卡</h3><table id="cardTable"></table></div>
+    <div class="box" id="runBox" style="margin-top:14px;display:none">
+      <h3>运行结果</h3>
+      <div class="verdict" id="runVerdict"></div>
       <div class="nums" id="runNums"></div>
-      <details style="margin-top:12px"><summary class="muted">原始输出</summary>
+      <details style="margin-top:12px"><summary class="hint" style="cursor:pointer">原始输出</summary>
         <pre id="runOut"></pre></details>
     </div>
-
-    <div class="box">
-      <h2>新建卡</h2>
-      <div class="grid">
+    <div class="box" style="margin-top:14px">
+      <h3>新建卡</h3>
+      <div class="grid g3">
         <div><label>编号</label><input id="f-id" placeholder="HK-003"></div>
         <div><label>类型</label><select id="f-kind">
-          <option value="cross_section">cross_section（截面）</option>
-          <option value="time_series">time_series（单标的时序）</option>
-        </select></div>
+          <option value="cross_section">cross_section 截面</option>
+          <option value="time_series">time_series 时序</option></select></div>
         <div><label>方向</label><select id="f-dir">
-          <option value="reversal">reversal（买跌得多）</option>
-          <option value="momentum">momentum（买涨得多）</option>
-        </select></div>
+          <option value="reversal">reversal 买跌得多</option>
+          <option value="momentum">momentum 买涨得多</option></select></div>
         <div><label>回看（月）</label><input id="f-lb" type="number" value="5" min="1" max="12"></div>
         <div><label>选股数</label><input id="f-top" type="number" value="3" min="1" max="20"></div>
         <div><label>成本（单边）</label><input id="f-cost" value="0.0008"></div>
@@ -109,176 +185,386 @@
       <textarea id="f-mech" rows="2" placeholder="散户追涨导致短期定价过度，随后回吐"></textarea>
       <label>预测（一句话）</label>
       <textarea id="f-claims" rows="2" placeholder="过去 5 个月跌幅最大的 3 只，未来 1 个月跑赢等权"></textarea>
-      <div class="hint">
-        参数一经运行就冻结：<b>不通过就淘汰，不许回来改 lookback 重试</b>。
-        要试新参数请用新的编号新建一张卡。
-      </div>
-      <div style="margin-top:12px"><button class="act" id="btnSave">保存卡</button></div>
+      <div class="hint">不通过就淘汰，<b style="color:var(--fg)">不许回来改 lookback 重试</b>。</div>
+      <div style="margin-top:14px"><button class="act" id="btnSave">保存卡</button></div>
     </div>
   </section>
 
-  <section class="panel" id="p-ledger">
-    <div class="box">
-      <h2>账本（追加式，失败也记）</h2>
-      <table id="ledgerTable"><thead><tr>
-        <th>时间</th><th>卡号</th><th>判定</th><th>IC CI 下界</th>
-        <th>超额 t</th><th>此前试过</th></tr></thead><tbody></tbody></table>
-      <div class="hint" id="ledgerHint"></div>
-    </div>
+  <section class="view" id="v-ledger">
+    <h2 class="page">账本</h2>
+    <p class="sub">追加式。失败的也记 —— 因为「试过几次」是判断显著性的前提。</p>
+    <div class="box"><h3>检验记录</h3><table id="ledgerTable"></table>
+      <div class="hint" id="ledgerHint"></div></div>
   </section>
 
-  <section class="panel" id="p-data">
-    <div class="box">
-      <h2>本地数据</h2>
-      <table id="dataTable"><tbody></tbody></table>
-      <div class="hint">
-        留出段（holdout）是唯一的干净考卷，<b>不要改</b>。
-        覆盖率＝实际拿到的样本 / 申请的样本；缺口部分就是残余偏差。
-      </div>
-    </div>
+  <section class="view" id="v-tools">
+    <h2 class="page">工具链</h2>
+    <p class="sub">每个工具都能独立运行，也能被统一入口调起。</p>
+    <div class="box"><h3>命令行工具</h3><table id="toolTable"></table></div>
   </section>
+
+  <section class="view" id="v-reports">
+    <h2 class="page">报告</h2>
+    <p class="sub">四棒的交付物与两份规划文档，原文渲染。</p>
+    <div class="flex" style="margin-bottom:14px">
+      <select id="mdPick" class="w"></select>
+      <span class="hint" style="margin:0" id="mdMeta"></span>
+    </div>
+    <div class="box"><div class="md" id="mdBody"><span class="loading">选择一份报告…</span></div></div>
+  </section>
+
+  <section class="view" id="v-data">
+    <h2 class="page">数据</h2>
+    <p class="sub">本地缓存与诚实宇宙。覆盖率＝拿到的样本 / 申请的样本，缺口就是残余偏差。</p>
+    <div class="grid g4" id="dataStats"></div>
+    <div class="box" style="margin-top:14px"><h3>缓存文件（按体积前 40）</h3><table id="cacheTable"></table></div>
+  </section>
+
 </main>
-
 <script>
-var state = {cards:[], running:null};
+var VIEWS = [
+  ["overview","概览"],["pipeline","四棒流水线"],["paths","路径结果"],
+  ["cards","假设卡"],["ledger","账本"],["tools","工具链"],
+  ["reports","报告"],["data","数据"]
+];
+var S = {cards:[], results:null};
 
 function el(id){return document.getElementById(id);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){
   return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-function api(path, opt){
-  return fetch(path, opt).then(function(r){return r.json();});
-}
+function api(p,o){return fetch(p,o).then(function(r){return r.json();});}
+function fx(x,d){if(x===null||x===undefined)return '—';
+  if(typeof x!=='number')return esc(x);return x.toFixed(d===undefined?4:d);}
+function pct(x,d){if(x===null||x===undefined)return '—';
+  return (x*100).toFixed(d===undefined?2:d)+'%';}
 function badge(v){
-  var k = v==='PASS'?'pass':(v==='FAIL'?'fail':'err');
-  var t = v==='PASS'?'通过':(v==='FAIL'?'不通过':(v||'—'));
-  return '<span class="badge '+k+'">'+esc(t)+'</span>';
-}
-function fmt(x, d){
-  if(x===null||x===undefined) return '—';
-  if(typeof x !== 'number') return esc(x);
-  return x.toFixed(d===undefined?4:d);
+  var m={PASS:['pass','通过'],FAIL:['fail','不通过']};
+  var t=m[v]||['mut',v||'—'];
+  return '<span class="badge '+t[0]+'">'+esc(t[1])+'</span>';
 }
 
-document.querySelectorAll('nav button').forEach(function(b){
-  b.onclick = function(){
-    document.querySelectorAll('nav button').forEach(function(x){x.classList.remove('on');});
-    document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('on');});
-    b.classList.add('on');
-    el('p-'+b.dataset.tab).classList.add('on');
-    if(b.dataset.tab==='ledger') loadLedger();
-    if(b.dataset.tab==='data') loadData();
-  };
-});
-
-function loadStatus(){
-  api('/api/status').then(function(d){
-    el('chips').innerHTML =
-      '<span class="chip">缓存 <b>'+d.cache_files+'</b> 只</span>'+
-      '<span class="chip">宇宙 <b>'+d.universe_size+'</b> 只'+
-        (d.coverage?' / 覆盖 <b>'+Math.round(d.coverage*100)+'%</b>':'')+'</span>';
+(function buildNav(){
+  el('nav').innerHTML = VIEWS.map(function(v,i){
+    return '<a data-v="'+v[0]+'" class="'+(i===0?'on':'')+
+      '"><span class="dot"></span>'+v[1]+'</a>';
+  }).join('');
+  document.querySelectorAll('#nav a').forEach(function(a){
+    a.onclick=function(){show(a.dataset.v);};
   });
-  api('/api/registry').then(function(d){
-    el('chips').innerHTML += '<span class="chip">账本 <b>'+d.total+'</b> 次 / 通过 <b>'+
-      d.passed+'</b></span>';
+})();
+
+function show(v){
+  document.querySelectorAll('#nav a').forEach(function(a){
+    a.classList.toggle('on', a.dataset.v===v);});
+  document.querySelectorAll('.view').forEach(function(s){
+    s.classList.toggle('on', s.id==='v-'+v);});
+  if(v==='ledger') loadLedger();
+  if(v==='data') loadData();
+  if(v==='tools') loadTools();
+  if(v==='cards') loadCards();
+  if(v==='reports' && !el('mdPick').dataset.init) initReports();
+}
+
+/* ---------- 概览 ---------- */
+function loadOverview(){
+  api('/api/overview').then(function(d){
+    el('ovSub').textContent = '生成于 ' + (d.generated||'—') + ' · 账本累计 ' +
+      d.registry.total + ' 次检验';
+    el('ovBanner').innerHTML =
+      '<div class="big">'+d.paths_passed+' / '+d.paths_tested+'</div>'+
+      '<div class="txt"><b>'+(d.headline||'')+'</b><br>'+
+      '判定口径：超额收益的 95% 置信区间下界 &gt; 0。任何一条过线，才谈仓位与产品。</div>';
+    el('ovStats').innerHTML = [
+      ['路径通过', d.paths_passed+' / '+d.paths_tested, '四条：时序 / 决策层 / 动量 / 反转'],
+      ['账本累计', d.registry.total, '通过 '+d.registry.passed+'（'+
+        (d.registry.pass_rate*100).toFixed(0)+'%）'],
+      ['诚实宇宙', d.data.universe_size+' 只', '覆盖率 '+
+        (d.data.coverage?Math.round(d.data.coverage*100)+'%':'—')+'，含退市 '+
+        (d.data.delisted_ok==null?'—':d.data.delisted_ok)],
+      ['本地缓存', d.data.cache_files+' 个 CSV', '市场：'+(d.data.markets||[]).join(' / ')]
+    ].map(function(s){
+      return '<div class="box stat"><div class="k">'+s[0]+'</div><div class="v">'+
+        esc(s[1])+'</div><div class="n">'+esc(s[2])+'</div></div>';
+    }).join('');
+    el('ovConclusion').innerHTML = esc(d.conclusion||'');
+    el('sideFoot').innerHTML = '路径 '+d.paths_passed+'/'+d.paths_tested+
+      ' 通过<br>账本 '+d.registry.total+' 次<br>缓存 '+d.data.cache_files+' 个文件';
+  });
+  api('/api/results').then(function(r){
+    S.results=r;
+    el('ovTimeline').innerHTML = (r.timeline||[]).map(function(t){
+      return '<li class="'+(t.ok?'ok':'bad')+'"><span class="d">'+esc(t.date)+
+        '</span>'+esc(t.event)+'</li>';
+    }).join('');
   });
 }
 
+/* ---------- 流水线 ---------- */
+function loadPipeline(){
+  api('/api/pipeline').then(function(d){
+    el('plRoles').innerHTML = d.roles.map(function(r){
+      var ok = r.exists;
+      return '<div class="role"><div class="top"><div><div class="r">'+esc(r.role)+
+        '</div><div class="ag">'+esc(r.agent)+'</div></div>'+
+        (ok?'<span class="badge pass">已交付</span>':'<span class="badge err">缺失</span>')+
+        '</div><div class="what">'+esc(r.what)+'</div>'+
+        '<div class="key">'+esc(r.key)+'</div>'+
+        '<div class="meta"><span class="mono">'+esc(r.artifact)+'</span>'+
+        '<span>'+r.lines+' 行</span><span>'+(r.bytes/1024).toFixed(1)+' KB</span></div></div>';
+    }).join('');
+  });
+}
+
+/* ---------- 路径结果 ---------- */
+function loadPaths(){
+  api('/api/results').then(function(r){
+    S.results=r;
+    el('pathTable').innerHTML =
+      '<thead><tr><th>路径</th><th>阶段</th><th>样本</th><th>证据</th><th>判定</th></tr></thead><tbody>'+
+      (r.paths||[]).map(function(p){
+        return '<tr><td><b>'+esc(p.name)+'</b><div class="hint" style="margin-top:4px">'+
+          esc(p.detail)+'<br><span style="color:var(--dim2)">原因：'+esc(p.why)+'</span></div></td>'+
+          '<td class="mut">'+esc(p.stage)+'</td><td class="mut">'+esc(p.scope)+'</td>'+
+          '<td class="mono">'+esc(p.evidence)+'</td><td>'+badge(p.verdict)+'</td></tr>';
+      }).join('')+'</tbody>';
+    drawIC(r.ic_curve||{});
+    el('decTable').innerHTML =
+      '<thead><tr><th>标的</th><th>平均仓位</th><th>有仓天数</th><th>决策层年化</th><th>买入持有年化</th></tr></thead><tbody>'+
+      ((r.decision_layer&&r.decision_layer.rows)||[]).map(function(x){
+        return '<tr><td class="mono">'+esc(x.symbol)+'</td><td class="num">'+
+          pct(x.avg_weight,1)+'</td><td class="num">'+pct(x.invested,0)+'</td><td class="num">'+
+          x.dec_cagr.toFixed(2)+'%</td><td class="num" style="color:var(--pass)">'+
+          x.bh_cagr.toFixed(2)+'%</td></tr>';
+      }).join('')+'</tbody>';
+  });
+}
+
+function drawIC(curve){
+  el('icTitle').textContent = curve.title || 'IC 曲线';
+  var vals = curve.values||[], labels = curve.labels||[];
+  if(!vals.length){el('icChart').innerHTML='<span class="loading">无数据</span>';return;}
+  var W=760,H=230,pad={l:44,r:16,t:16,b:34};
+  var iw=W-pad.l-pad.r, ih=H-pad.t-pad.b;
+  var mx=Math.max.apply(null,vals.map(Math.abs))*1.25||1;
+  var zero=pad.t+ih/2;
+  var bw=iw/vals.length*0.62, step=iw/vals.length;
+  var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" height="'+H+'">';
+  [1,0.5,-0.5,-1].forEach(function(f){
+    var y=zero-f*mx/1.25*ih/2/ (mx) * mx; /* 简化：用比例 */
+  });
+  svg+='<line x1="'+pad.l+'" y1="'+zero+'" x2="'+(W-pad.r)+'" y2="'+zero+
+    '" stroke="#3a4350" stroke-width="1"/>';
+  svg+='<text x="'+(pad.l-8)+'" y="'+(zero+4)+'" fill="#5d6878" font-size="10" text-anchor="end">0</text>';
+  svg+='<text x="'+(pad.l-8)+'" y="'+(pad.t+10)+'" fill="#5d6878" font-size="10" text-anchor="end">+'+mx.toFixed(1)+'</text>';
+  svg+='<text x="'+(pad.l-8)+'" y="'+(pad.t+ih)+'" fill="#5d6878" font-size="10" text-anchor="end">-'+mx.toFixed(1)+'</text>';
+  var sig=curve.significant_negative||[];
+  vals.forEach(function(v,i){
+    var x=pad.l+step*i+(step-bw)/2;
+    var h=Math.abs(v)/mx*(ih/2);
+    var y=v>=0?zero-h:zero;
+    var fill=v>=0?'#2ecc71':'#f0555a';
+    var op=sig.indexOf(i+1)>=0?0.95:0.45;
+    svg+='<rect x="'+x+'" y="'+y+'" width="'+bw+'" height="'+Math.max(h,1)+
+      '" fill="'+fill+'" opacity="'+op+'" rx="2"/>';
+    if(sig.indexOf(i+1)>=0){
+      svg+='<text x="'+(x+bw/2)+'" y="'+(v>=0?y-5:y+Math.max(h,1)+12)+
+        '" fill="#f0555a" font-size="10" text-anchor="middle" font-weight="600">'+v.toFixed(1)+'</text>';
+    }
+    svg+='<text x="'+(x+bw/2)+'" y="'+(H-pad.b+16)+'" fill="#5d6878" font-size="10" '+
+      'text-anchor="middle">'+esc(labels[i]||('#'+(i+1)))+'</text>';
+  });
+  svg+='</svg>';
+  el('icChart').innerHTML=svg;
+  el('icHint').innerHTML = (curve.unit?esc(curve.unit)+'。':'')+
+    '实心红柱＝置信区间显著为负（反转）。注意全部为负：A股 这批数据里没有动量，只有反转倾向 —— '+
+    '而反转经多重检验校正后同样不显著。';
+}
+
+/* ---------- 卡片 ---------- */
 function loadCards(){
   api('/api/cards').then(function(d){
-    state.cards = d.cards;
-    var tb = el('cardTable').querySelector('tbody');
-    tb.innerHTML = d.cards.map(function(c){
-      return '<tr><td class="mono">'+esc(c.id)+'</td>'+
-        '<td class="muted">'+esc(c.kind||'')+'</td>'+
-        '<td class="muted">'+esc(c.direction||'—')+'</td>'+
-        '<td class="mono">'+esc(c.lookback||'—')+'</td>'+
-        '<td class="mono">'+esc(c.top_n||'—')+'</td>'+
-        '<td class="muted">'+esc(c.mechanism||'')+'</td>'+
-        '<td><button class="ghost" onclick="runCard(\''+esc(c.id)+'\')">运行</button></td></tr>';
-    }).join('') || '<tr><td colspan="7" class="muted">还没有卡</td></tr>';
+    S.cards=d.cards;
+    el('cardTable').innerHTML =
+      '<thead><tr><th>编号</th><th>类型</th><th>方向</th><th>回看</th><th>选股</th>'+
+      '<th>机制</th><th></th></tr></thead><tbody>'+
+      (d.cards.map(function(c){
+        return '<tr><td class="mono"><b>'+esc(c.id)+'</b></td><td class="mut">'+esc(c.kind)+
+          '</td><td class="mut">'+esc(c.direction||'—')+'</td><td class="num">'+
+          esc(c.lookback||'—')+'</td><td class="num">'+esc(c.top_n||'—')+'</td>'+
+          '<td class="mut" style="max-width:320px">'+esc(c.mechanism||'')+'</td>'+
+          '<td><button class="ghost" onclick="runCard(\''+esc(c.id)+'\')">运行</button></td></tr>';
+      }).join('')||'<tr><td colspan="7" class="loading">还没有卡</td></tr>')+'</tbody>';
   });
 }
-
 function runCard(id){
-  if(!confirm('运行「'+id+'」？\n\n参数会被冻结并写入账本。跑一张可能要几分钟。')) return;
+  if(!confirm('运行「'+id+'」？\n\n参数会被冻结并写入账本。跑一张通常 1–5 分钟。'))return;
   el('runBox').style.display='block';
-  el('runVerdict').innerHTML='<span class="muted">运行中…（截面卡通常 1–5 分钟）</span>';
-  el('runNums').innerHTML=''; el('runOut').textContent='';
+  el('runVerdict').innerHTML='<span class="loading">运行中…</span>';
+  el('runNums').innerHTML='';el('runOut').textContent='';
   api('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({id:id})}).then(function(r){
       if(r.error){el('runVerdict').innerHTML='<span class="badge err">'+esc(r.error)+'</span>';return;}
       poll(r.job);
     });
 }
-
 function poll(job){
   api('/api/job/'+job).then(function(j){
-    if(j.status==='running'){
-      el('runVerdict').innerHTML='<span class="muted">运行中… '+Math.round((Date.now()/1000))%60+'s</span>';
-      setTimeout(function(){poll(job);},2500); return;
-    }
-    el('runOut').textContent = j.output || '';
-    el('runVerdict').innerHTML = badge(j.verdict);
-    var m = j.metrics || {};
-    var keys = ['ic','ic_t','ic_ci_low','ic_ci_high','strat_cagr','bench_cagr','excess_t'];
-    el('runNums').innerHTML = keys.filter(function(k){return m[k]!==undefined;})
-      .map(function(k){return '<div class="num"><div class="k">'+k+'</div><div class="v">'+
-        fmt(m[k])+'</div></div>';}).join('');
-    loadStatus(); loadCards();
+    if(j.status==='running'){setTimeout(function(){poll(job);},2500);return;}
+    el('runOut').textContent=j.output||'';
+    el('runVerdict').innerHTML=badge(j.verdict);
+    var m=j.metrics||{};
+    el('runNums').innerHTML=['ic','ic_t','ic_ci_low','ic_ci_high','excess_t']
+      .filter(function(k){return m[k]!==undefined;})
+      .map(function(k){return '<div class="n"><div class="k">'+k+
+        '</div><div class="v">'+fx(m[k])+'</div></div>';}).join('');
+    loadOverview();loadCards();
   });
 }
-
 function saveCard(){
-  var card = {
-    id: el('f-id').value.trim(),
-    kind: el('f-kind').value,
-    direction: el('f-dir').value,
-    lookback: parseInt(el('f-lb').value,10),
-    top_n: parseInt(el('f-top').value,10),
-    cost: parseFloat(el('f-cost').value) || 0.0008,
-    holdout: '2021-01-01',
-    universe: 'universe.json',
-    mechanism: el('f-mech').value.trim(),
-    claims: el('f-claims').value.trim()
-  };
+  var c={id:el('f-id').value.trim(),kind:el('f-kind').value,direction:el('f-dir').value,
+    lookback:parseInt(el('f-lb').value,10),top_n:parseInt(el('f-top').value,10),
+    cost:parseFloat(el('f-cost').value)||0.0008,holdout:'2021-01-01',
+    universe:'universe.json',mechanism:el('f-mech').value.trim(),
+    claims:el('f-claims').value.trim()};
   api('/api/cards',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(card)}).then(function(r){
+    body:JSON.stringify(c)}).then(function(r){
       if(r.error){alert(r.error);return;}
-      el('f-id').value=''; el('f-mech').value=''; el('f-claims').value='';
+      el('f-id').value='';el('f-mech').value='';el('f-claims').value='';
       loadCards();
     });
 }
 
+/* ---------- 账本 ---------- */
 function loadLedger(){
   api('/api/registry').then(function(d){
-    var tb = el('ledgerTable').querySelector('tbody');
-    tb.innerHTML = d.entries.map(function(e){
-      var m = e.metrics || {};
-      return '<tr><td class="mono muted">'+esc((e.ts||'').replace('T',' '))+'</td>'+
-        '<td class="mono">'+esc(e.id)+'</td><td>'+badge(e.verdict)+'</td>'+
-        '<td class="mono">'+fmt(m.ic_ci_low)+'</td>'+
-        '<td class="mono">'+fmt(m.excess_t,2)+'</td>'+
-        '<td class="mono">'+esc(e.n_tests_before)+'</td></tr>';
-    }).join('') || '<tr><td colspan="6" class="muted">账本是空的</td></tr>';
-    el('ledgerHint').innerHTML = '累计 <b>'+d.total+'</b> 次检验，通过 <b>'+d.passed+
-      '</b> 次（通过率 '+(d.pass_rate*100).toFixed(1)+'%）。' +
-      (d.pass_rate>0.2 ? ' <span style="color:var(--warn)">通过率偏高，检查卡片是否写得太松。</span>':'');
+    el('ledgerTable').innerHTML =
+      '<thead><tr><th>时间</th><th>卡号</th><th>判定</th><th>IC CI 下界</th>'+
+      '<th>超额 t</th><th>此前试过</th></tr></thead><tbody>'+
+      (d.entries.map(function(e){
+        var m=e.metrics||{};
+        return '<tr><td class="mono mut">'+esc((e.ts||'').replace('T',' '))+'</td>'+
+          '<td class="mono">'+esc(e.id)+'</td><td>'+badge(e.verdict)+'</td>'+
+          '<td class="num">'+fx(m.ic_ci_low)+'</td><td class="num">'+fx(m.excess_t,2)+
+          '</td><td class="num">'+esc(e.n_tests_before)+'</td></tr>';
+      }).join('')||'<tr><td colspan="6" class="loading">账本是空的</td></tr>')+'</tbody>';
+    el('ledgerHint').innerHTML='累计 <b>'+d.total+'</b> 次，通过 <b>'+d.passed+
+      '</b> 次（'+(d.pass_rate*100).toFixed(1)+'%）。'+
+      (d.pass_rate>0.2?'<span style="color:var(--warn)"> 通过率偏高，检查卡片是否写得太松。</span>':'');
+    el('sideFoot').innerHTML='账本 '+d.total+' 次<br>通过 '+d.passed+' 次';
   });
 }
 
+/* ---------- 工具 ---------- */
+function loadTools(){
+  api('/api/tools').then(function(d){
+    el('toolTable').innerHTML =
+      '<thead><tr><th>工具</th><th>作用</th><th>行数</th><th>用法</th></tr></thead><tbody>'+
+      d.tools.map(function(t){
+        return '<tr><td class="mono">'+esc(t.path)+'</td><td>'+esc(t.what)+'</td>'+
+          '<td class="num">'+(t.lines||'—')+'</td>'+
+          '<td><code style="font-size:11.5px;background:#0a0d11;padding:2px 6px;'+
+          'border-radius:4px;border:1px solid var(--line)">'+esc(t.usage)+'</code></td></tr>';
+      }).join('')+'</tbody>';
+  });
+}
+
+/* ---------- 报告 ---------- */
+function initReports(){
+  var list=['research.md','design.md','test-report.md','ROADMAP-v2.md','RUNBOOK.md','README.md'];
+  el('mdPick').innerHTML=list.map(function(n){
+    return '<option value="'+n+'">'+n+'</option>';}).join('');
+  el('mdPick').dataset.init='1';
+  el('mdPick').onchange=function(){loadMd(this.value);};
+  loadMd(list[0]);
+}
+function loadMd(name){
+  el('mdBody').innerHTML='<span class="loading">读取中…</span>';
+  api('/api/md?name='+encodeURIComponent(name)).then(function(r){
+    if(r.error){el('mdBody').innerHTML='<span class="badge err">'+esc(r.error)+'</span>';return;}
+    el('mdMeta').textContent=r.content.length+' 字符';
+    el('mdBody').innerHTML=md2html(r.content);
+  });
+}
+/* 极简 markdown：标题/表格/列表/引用/代码/粗体/行内代码 */
+function md2html(src){
+  var lines=src.split(/\r?\n/), out=[], i=0, inCode=false, tbl=[];
+  function inline(s){
+    s=esc(s);
+    s=s.replace(/`([^`]+)`/g,'<code>$1</code>');
+    s=s.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
+    s=s.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" style="color:var(--acc)">$1</a>');
+    return s;
+  }
+  function flushTable(){
+    if(!tbl.length)return;
+    var rows=tbl.filter(function(r){return !/^\|[\s:\-|]+\|$/.test(r.trim());});
+    var html='<table>';
+    rows.forEach(function(r,idx){
+      var cells=r.trim().replace(/^\||\|$/g,'').split('|');
+      html+='<tr>'+cells.map(function(c){
+        return (idx===0?'<th>':'<td>')+inline(c.trim())+(idx===0?'</th>':'</td>');
+      }).join('')+'</tr>';
+    });
+    html+='</table>';out.push(html);tbl=[];
+  }
+  while(i<lines.length){
+    var L=lines[i];
+    if(/^```/.test(L)){
+      if(inCode){out.push('</code></pre>');inCode=false;}
+      else{flushTable();out.push('<pre><code>');inCode=true;}
+      i++;continue;
+    }
+    if(inCode){out.push(esc(L));i++;continue;}
+    if(/^\s*\|.*\|\s*$/.test(L)){tbl.push(L);i++;continue;}
+    flushTable();
+    if(/^\s*$/.test(L)){i++;continue;}
+    if(/^#{1,4}\s/.test(L)){
+      var lv=Math.min(4,(L.match(/^#+/)||['#'])[0].length);
+      out.push('<h'+lv+'>'+inline(L.replace(/^#+\s*/,''))+'</h'+lv+'>');
+    } else if(/^>\s?/.test(L)){
+      out.push('<blockquote>'+inline(L.replace(/^>\s?/,''))+'</blockquote>');
+    } else if(/^\s*[-*]\s+/.test(L)){
+      out.push('<div style="padding-left:18px;position:relative"><span style="position:absolute;'+
+        'left:4px;color:var(--dim2)">•</span>'+inline(L.replace(/^\s*[-*]\s+/,''))+'</div>');
+    } else if(/^\s*\d+\.\s+/.test(L)){
+      out.push('<div style="padding-left:18px">'+inline(L)+'</div>');
+    } else if(/^---+$/.test(L.trim())){
+      out.push('<hr>');
+    } else {
+      out.push('<p style="margin:8px 0">'+inline(L)+'</p>');
+    }
+    i++;
+  }
+  flushTable();
+  if(inCode)out.push('</code></pre>');
+  return out.join('\n');
+}
+
+/* ---------- 数据 ---------- */
 function loadData(){
   api('/api/status').then(function(d){
-    el('dataTable').querySelector('tbody').innerHTML =
-      '<tr><th>本地缓存标的</th><td class="mono">'+d.cache_files+' 个 CSV</td></tr>'+
-      '<tr><th>诚实宇宙</th><td class="mono">'+d.universe_size+' 只</td></tr>'+
-      '<tr><th>覆盖率</th><td class="mono">'+(d.coverage?Math.round(d.coverage*100)+'%':'—')+'</td></tr>'+
-      '<tr><th>其中退市票</th><td class="mono">'+(d.delisted_ok==null?'—':d.delisted_ok)+'</td></tr>'+
-      '<tr><th>留出段起点</th><td class="mono">'+esc(d.held_out_from)+'</td></tr>';
+    el('dataStats').innerHTML=[
+      ['缓存文件',d.cache_files,'本地 CSV 数量'],
+      ['宇宙标的',d.universe_size,'申请 '+(d.requested||'—')+' 只'],
+      ['覆盖率',d.coverage?(Math.round(d.coverage*100)+'%'):'—','缺口即残余偏差'],
+      ['退市样本',d.delisted_ok==null?'—':d.delisted_ok,'含退市票是诚实宇宙的关键']
+    ].map(function(s){
+      return '<div class="box stat"><div class="k">'+s[0]+'</div><div class="v">'+esc(s[1])+
+        '</div><div class="n">'+esc(s[2])+'</div></div>';
+    }).join('');
+  });
+  api('/api/cache').then(function(d){
+    el('cacheTable').innerHTML=
+      '<thead><tr><th>文件</th><th>行数</th><th>大小</th></tr></thead><tbody>'+
+      (d.files.map(function(f){
+        return '<tr><td class="mono">'+esc(f.name)+'</td><td class="num">'+f.rows+
+          '</td><td class="num">'+f.kb+' KB</td></tr>';
+      }).join('')||'<tr><td colspan="3" class="loading">没有缓存</td></tr>')+'</tbody>';
   });
 }
 
-el('btnSave').onclick = saveCard;
-loadStatus(); loadCards();
+el('btnSave').onclick=saveCard;
+loadOverview();loadPipeline();loadPaths();loadCards();
 </script>
 </body>
 </html>

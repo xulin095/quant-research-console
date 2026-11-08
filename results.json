@@ -1,0 +1,53 @@
+{
+  "generated": "2026-11-08",
+  "headline": "四条路径、上百次检验、0 个通过",
+  "conclusion": "在「免费数据 + 现成标的池 + 简单信号」的条件下，找不到可证明的优势。这是结论，不是失败：它是有工具、有留出段、有预注册的情况下得出的。",
+  "paths": [
+    {"id": "P1", "name": "时序双均线择时", "stage": "单标的", "scope": "15 只（美股 12 + A股 3）",
+     "evidence": "0 / 15 有超额证据", "verdict": "FAIL",
+     "detail": "11 个显著跑输买入持有；超额累计最差 −99.5%（NVDA）",
+     "why": "长期上涨中大量时间空仓（机会成本），加上几十笔的双边成本，超额被两头夹死"},
+    {"id": "P2", "name": "决策规则层", "stage": "仓位", "scope": "10 只",
+     "evidence": "0 / 10 通过", "verdict": "FAIL",
+     "detail": "平均仓位 0.0%–0.3%，有仓天数 0%–17%；风险调整后仍跑输",
+     "why": "决策层只能决定「下多少」，不能创造优势；没有优势时它唯一正确的行为就是不交易"},
+    {"id": "P3", "name": "截面动量", "stage": "选股", "scope": "59 只美股（含 GE/F/INTC 等跑输票）",
+     "evidence": "0 / 12 个回看期显著", "verdict": "FAIL",
+     "detail": "最亮 3 个月 t=1.11；Bonferroni 后 p=0.82；留出段 IC 跨 0",
+     "why": "12 只名票上曾出现 IC=+0.063（t=2.13），扩到 59 只后消失 —— 那是幸存者偏差"},
+    {"id": "P4", "name": "截面反转（预注册 HK-001）", "stage": "选股", "scope": "42 只 A股（含 11 只退市，覆盖 93%）",
+     "evidence": "不通过（1 次性检验）", "verdict": "FAIL",
+     "detail": "留出段 IC=+3.36 但 CI [−3.32, +10.23] 跨 0；超额 t=−0.84；发现后校正 p=0.987",
+     "why": "方向是看到数据之后才选的；按 24 次检验校正后毫无显著性"}
+  ],
+  "ic_curve": {
+    "title": "截面策略：各回看期的 rank IC（训练段，A股 42 只）",
+    "unit": "IC × 100（负值＝反转倾向）",
+    "labels": ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"],
+    "values": [-3.68, -2.90, -5.73, -6.30, -6.37, -3.70, -1.09, -1.59, -1.02, -0.21, 0.01, 0.47],
+    "significant_negative": [4, 5]
+  },
+  "decision_layer": {
+    "title": "决策层回放（10 只，平均仓位 vs 年化）",
+    "rows": [
+      {"symbol": "AAPL", "avg_weight": 0.003, "invested": 0.17, "dec_cagr": 0.05, "bh_cagr": 26.49},
+      {"symbol": "NVDA", "avg_weight": 0.002, "invested": 0.11, "dec_cagr": 0.05, "bh_cagr": 46.48},
+      {"symbol": "MSFT", "avg_weight": 0.001, "invested": 0.06, "dec_cagr": -0.01, "bh_cagr": 21.04},
+      {"symbol": "JPM", "avg_weight": 0.001, "invested": 0.06, "dec_cagr": 0.00, "bh_cagr": 16.43},
+      {"symbol": "600276", "avg_weight": 0.001, "invested": 0.04, "dec_cagr": 0.04, "bh_cagr": 21.40},
+      {"symbol": "600030", "avg_weight": 0.000, "invested": 0.00, "dec_cagr": 0.00, "bh_cagr": 0.43}
+    ]
+  },
+  "timeline": [
+    {"date": "第0棒", "event": "目录 + git + 裁判工具（13 条机械验收）", "ok": true},
+    {"date": "第1棒", "event": "research.md：数据源核实，19 个来源链接", "ok": true},
+    {"date": "第2棒", "event": "design.md：5 节编号 + 口径总表 + 冲突裁决", "ok": true},
+    {"date": "第3棒", "event": "代码 16 文件，真跑出 AAPL / 600519 报告", "ok": true},
+    {"date": "第4棒", "event": "test-report.md：8 个问题，无阻断 bug", "ok": true},
+    {"date": "v2-S2", "event": "时序验证：15 只，0 证据", "ok": false},
+    {"date": "v2-S3", "event": "决策层：10 只，0 通过", "ok": false},
+    {"date": "v2-S5", "event": "截面动量：59 只，0 显著（幸存者偏差暴露）", "ok": false},
+    {"date": "v2-S6", "event": "诚实宇宙：42 只含 11 退市，被反转信号", "ok": false},
+    {"date": "HK-001", "event": "预注册反转检验：不通过（校正 p=0.987）", "ok": false}
+  ]
+}
