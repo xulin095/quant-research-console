@@ -33,7 +33,7 @@ h2.page{font-size:19px;margin:0 0 4px}
 .sub{color:var(--dim);font-size:13px;margin:0 0 22px}
 .grid{display:grid;gap:14px}
 .g4{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
-.g3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(185px,1fr))}
 .g2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
 .box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
 .box h3{margin:0 0 12px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;
@@ -65,7 +65,7 @@ td.num,.mono{font-family:ui-monospace,Consolas,monospace;font-variant-numeric:ta
 .role .key{font-size:12.5px;color:var(--fg);background:var(--panel2);border-radius:6px;
  padding:9px 11px;line-height:1.55}
 .role .meta{margin-top:10px;font-size:11.5px;color:var(--dim2);display:flex;gap:12px}
-input,select,textarea{background:#0a0d11;border:1px solid var(--line);color:var(--fg);
+input,select,textarea{background:#0a0d11;border:1px solid var(--line);color:var(--fg);min-width:0;
  border-radius:7px;padding:8px 10px;font-size:13px;width:100%;font-family:inherit}
 label{display:block;font-size:11.5px;color:var(--dim2);margin:11px 0 5px;
  text-transform:uppercase;letter-spacing:.05em}
@@ -254,9 +254,9 @@ select.w{width:auto;min-width:220px}
           <option value="crypto">crypto 加密（需要代理）</option></select></div>
         <div><label>代码</label><input id="f-symbol" placeholder="例如 AAPL / 600519 / BTCUSDT"></div>
         <div><label>起止日期</label>
-          <div class="flex"><input id="f-start" value="2010-01-01" style="max-width:130px">
+          <div class="flex"><input id="f-start" value="2010-01-01" style="max-width:118px">
           <span class="muted">→</span>
-          <input id="f-end" value="2025-12-31" style="max-width:130px"></div></div>
+          <input id="f-end" value="2025-12-31" style="max-width:118px"></div></div>
       </div>
       <label>代理（只在美股/加密时需要；本机默认 127.0.0.1:7897）</label>
       <input id="f-proxy" value="http://127.0.0.1:7897" style="max-width:320px">
