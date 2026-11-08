@@ -120,12 +120,19 @@ pre{background:#0a0d11;border:1px solid var(--line);border-radius:8px;padding:13
 .loading{color:var(--dim2);font-size:13px}
 .flex{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 select.w{width:auto;min-width:220px}
+.langbar{display:flex;gap:6px;padding:10px 18px;border-top:1px solid var(--line)}
+button.sm{padding:3px 10px;font-size:12px}
+button.sm.on{border-color:var(--acc);color:var(--acc)}
 </style>
 </head>
 <body>
 <aside>
   <div class="brand"><h1>量化研究台</h1><p>研究工具 · 不构成投资建议</p></div>
   <nav id="nav"></nav>
+  <div class="langbar" id="langbar">
+    <button class="ghost sm" id="langZh">中文</button>
+    <button class="ghost sm" id="langEn">EN</button>
+  </div>
   <div class="side-foot" id="sideFoot"></div>
 </aside>
 <main>
@@ -328,7 +335,315 @@ select.w{width:auto;min-width:220px}
 
 </main>
 <div id="tip" class="tip"></div>
+
 <script>
+/* ==================== i18n（中文为源语言，运行时替换成英文） ==================== */
+var I18N_EN = {
+ " · ": " · ",
+ " 个": "",
+ " 个交易日": " trading days",
+ " 个交易日，": " trading days, ",
+ " 只": " tickers",
+ " 年": "y",
+ " 条": " entries",
+ " 次": " runs",
+ " 次（": " runs (",
+ " 次，通过 ": " runs, pass ",
+ " 行": " rows",
+ " 行，丢弃非正价 ": " rows; dropped non-positive: ",
+ "IC CI 下界": "IC CI lower",
+ "IC 曲线": "IC curve",
+ "cn A 股（直连）": "cn - A-shares (direct)",
+ "cn A股": "cn - A-shares",
+ "cross_section 截面": "cross_section",
+ "crypto 加密": "crypto",
+ "crypto 加密（需要代理）": "crypto (needs proxy)",
+ "lag1 自相关": "lag1 autocorr",
+ "lag1 自相关：今天的涨跌跟昨天还有没有关系（正＝顺着走，负＝往回摆）。VR：波动越滚越大还是被吃掉。z：把日期打乱重来 120 次，看这个值有多难得 —— 超过 2 才算「不是碰巧」。": "lag1 autocorrelation: does today's return remember yesterday's (positive = trending, negative = reverting). VR: does volatility compound or get eaten. z: the date order is shuffled 120 times to see how rare this value is - above 2 counts as not-luck.",
+ "momentum 买涨得多": "momentum (buy winners)",
+ "reversal 买跌得多": "reversal (buy losers)",
+ "time_series 时序": "time_series",
+ "us 美股": "us - US equities",
+ "us 美股（需要代理）": "us - US equities (needs proxy)",
+ "—— 那等于换一道题。": "- that is a different exam.",
+ "① 按代码拉数据（不用自己找文件）": "1. Fetch by ticker (no file hunting)",
+ "② 分析结果": "2. Result",
+ "③ 上传自己的数据（已有 CSV 文件时用这个）": "3. Upload your own data (when you already have a CSV)",
+ "⚠ 结构混杂：做截面研究时建议分开子集，不要把两种结构混在一个排序里": "Mixed structures: for cross-sectional work, split the universe - do not rank trending and mean-reverting names together.",
+ "「平均仓位」越低说明估计器越不认为有优势。决策层只能决定下多少，不能创造优势。": "The lower the average position, the less the estimator believes there is an edge. The decision layer sizes bets - it cannot create edge.",
+ "」？": "\"?",
+ "上传后会做四项校验：列是否齐全、日期能否解析并去重排序、价格是否为正、是否 ≥60 行。 通过则落成标准表": "Upload runs four checks: columns present, dates parseable and sortable, prices positive, at least 60 rows. On success it becomes a standard table",
+ "上传后会做四项校验：列是否齐全、日期能否解析并去重排序、价格是否为正、是否 ≥60 行。 通过则落成标准表 ， 立即可以被验证器使用。校验不通过会明确告诉你哪一项不合格，不会偷偷修补数据。": "Upload runs four checks: columns present, dates parseable and sortable, prices positive, at least 60 rows. On success it becomes a standard table and is immediately usable. On failure it names the failing check - it never silently patches your data.",
+ "上传并校验": "Upload and validate",
+ "上面拉取成功后，这里会自动显示这只票的历史结构。也可以直接在下面点「批量画像」看全部标的。": "After a successful fetch the structural result appears here. You can also run the batch profile over everything cached.",
+ "下载 .md 文件": "Download .md",
+ "不许回来改回看月数重试": "Do not come back and tune the lookback",
+ "不通过": "FAIL",
+ "不通过就淘汰。": "A fail eliminates it.",
+ "个交易日": " trading days",
+ "个交易日，": " trading days, ",
+ "个走到了最后。": " made it through.",
+ "中文": "中文",
+ "举个例子": "Example",
+ "买入持有年化": "Buy-hold CAGR",
+ "买前几名": "Names to hold",
+ "于是写一条检验：": "So you write a test:",
+ "仅显示前 60 只，完整清单见 profiles.json": "Showing the first 60 - full list in profiles.json",
+ "代理（只在美股/加密时需要；本机默认 127.0.0.1:7897）": "Proxy (only for US/crypto; local default 127.0.0.1:7897)",
+ "代码": "Ticker",
+ "作用": "Purpose",
+ "你有一个说法，让历史数据来判它一次。": "you have a claim, and history gets to judge it once.",
+ "你观察到「A 股里，过去半年跌得最狠的几只，下个月往往会反弹」。": "You notice that in A-shares, the worst performers over the past six months often bounce next month.",
+ "例如 AAPL / 600519 / BTCUSDT": "e.g. AAPL / 600519 / BTCUSDT",
+ "例如 MYSTOCK 或 600519": "e.g. MYSTOCK or 600519",
+ "保存卡": "Save card",
+ "假设检验": "Hypothesis testing",
+ "做什么": "What it does",
+ "先在上面填一个代码（例如刚上传的那只），再点「分析结构」。": "Enter a ticker above first (the one you just uploaded), then run the analysis.",
+ "先填代码": "Enter a ticker first",
+ "先填代码。": "Enter a ticker first.",
+ "共 ": "Total ",
+ "共 <b>": "Total <b>",
+ "再点一次选择可换文件": "Click again to choose a different file",
+ "决策层回放": "Decision-layer replay",
+ "决策层年化": "Decision CAGR",
+ "分析报告": "Analysis report",
+ "分析报告_": "analysis_report_",
+ "判定": "Verdict",
+ "加载中…": "Loading…",
+ "卡号": "Card",
+ "原因：": "Reason: ",
+ "原始输出": "Raw output",
+ "去拉数据 →": "Fetch data →",
+ "去检验 →": "Run a test →",
+ "参数会被冻结并写入账本。跑一张通常 1–5 分钟。": "Parameters will be frozen and written to the log. A card usually takes 1-5 minutes.",
+ "另有": "Also",
+ "只，拿到": "got",
+ "只：趋势型": " tickers: trending",
+ "可试方向：": "Worth testing:",
+ "哪条路": "Approach",
+ "四条路径的实测结论": "Measured results across four approaches",
+ "四条路里过了几条": "out of four",
+ "回撤": "Drawdown",
+ "回看": "Lookback",
+ "回看几个月": "Lookback (months)",
+ "在这个项目里：": "In this project: ",
+ "均值回归型": "mean-reverting",
+ "复制 Markdown": "Copy Markdown",
+ "好了：": "Done: ",
+ "字符": " chars",
+ "它不比「有没有赚钱」，比的是：": "It does not compare \"did it make money\". It compares: ",
+ "它会告诉你三件事：数据够不够用、这只票过去是「顺着走」还是「来回摆」、以及你想到的那个方向到底是真有用，还是只是看着像。": "Three answers: is the data good enough, has this stock historically trended or mean-reverted, and is your idea real or just noise that looks like a pattern.",
+ "它凭什么可信": "Why you can trust it",
+ "完成，已自动画出结构画像": "Done - structural profile generated",
+ "实心红柱＝置信区间显著为负（反转）。注意全部为负：A股 这批数据里没有动量，只有反转倾向 —— 而反转经多重检验校正后同样不显著。": "Solid red bars = confidence interval significantly negative (reversal). Note they are all negative: this A-share sample has no momentum, only reversal - and reversal is not significant after multiple-testing correction either.",
+ "工作日志": "Run log",
+ "工具": "Tool",
+ "已下载：": "Downloaded: ",
+ "已交付": "delivered",
+ "已入库": "cached",
+ "已入库 ": "cached ",
+ "已入库标的": "Cached tickers",
+ "已复制": "Copied",
+ "已有卡": "Cards",
+ "已有报告": "Existing reports",
+ "已生成": "Generated",
+ "已经验证过的方向（历史记录）": "Approaches already tested (history)",
+ "已选择：": "Selected: ",
+ "已验证方向": "Approach verdicts",
+ "市场": "Market",
+ "市场＝A股，方向＝买跌得多的，回看＝6 个月，买前 3 名": "market = cn, direction = buy losers, lookback = 6 months, hold top 3",
+ "平均仓位": "Avg position",
+ "年化": "CAGR",
+ "年化收益": "CAGR",
+ "年化波动": "Annual vol",
+ "年数": "Years",
+ "必需列：date, open, high, low, close, volume（中文列名也认：日期/开盘/最高/最低/收盘/成交量）": "Required columns: date, open, high, low, close, volume (Chinese headers are accepted too)",
+ "成本（单边）": "Cost (per side)",
+ "截面 IC 曲线": "Cross-section IC curve",
+ "打个比方：": "Think of it like this: ",
+ "扫描缓存中…（106 个文件，约 3–8 秒）": "Scanning cache… (about 3-8 seconds)",
+ "批量画像（全部缓存标的）": "Batch profile (everything cached)",
+ "把 CSV 拖到这里，或点击选择文件": "Drop a CSV here, or click to choose a file",
+ "把你的判断写成一张卡，跑一次。过不了就是过不了，系统不会替你圆场。": "Write your claim as a card and run it once. If it fails, it fails - nothing gets massaged.",
+ "报告会存到 reports\\ 目录，同时显示在这里": "Saved under reports\\ and shown here",
+ "拉取中…（美股走代理，通常 3–10 秒）": "Fetching… (US goes through the proxy; usually 3-10s)",
+ "拉取失败": "Fetch failed",
+ "拉取数据": "Fetch",
+ "拉完会自动做结构画像": "The structural profile runs automatically afterwards",
+ "拉完立刻出画像：这只票历史上是趋势型还是均值回归型，该往哪个方向想。": "The profile appears immediately: trending or mean-reverting, and which direction is worth testing.",
+ "提示：": "Note:",
+ "搜术语，或搜你想问的话（比如「回撤」「凭运气」「为什么样本外重要」）": "Search a term, or just ask in your own words (e.g. drawdown, luck, why out-of-sample matters)",
+ "改了就等于换一道题。想试别的，请新建一条。": "because that is just taking a different exam. Want something else? Write a new card.",
+ "散户追涨导致短期定价过度，随后回吐": "Retail chases rallies, short-term pricing overshoots, then gives back",
+ "数据": "Data",
+ "数据分析": "Data",
+ "数据够不够用，一眼能看出来。覆盖率＝申请 100 只、实际拿到几只 —— 缺口就是还没看清的那部分。": "You can see at a glance whether the data is usable. Coverage = how many of the requested tickers actually came back; the gap is what you have not looked at yet.",
+ "数据覆盖率": "Data coverage",
+ "新建一条检验": "New test",
+ "方向": "Direction",
+ "无数据": "no data",
+ "无明显结构": "no clear structure",
+ "时间": "Time",
+ "最大回撤": "Max drawdown",
+ "有 ": "",
+ "有仓天数": "Days held",
+ "未知原因": "unknown reason",
+ "本地缓存的 CSV 文件数": "Local CSV files",
+ "术语": "Glossary",
+ "术语白话库": "Plain-language glossary",
+ "机制": "Mechanism",
+ "机制（必须能说出「谁在亏钱」）": "Mechanism (say who is losing money)",
+ "标的": "Ticker",
+ "校验中…": "Validating…",
+ "校验未通过": "Validation failed",
+ "检验": "test",
+ "检验 ": "tests ",
+ "检验记录": "Run records",
+ "概览": "Overview",
+ "此前试过": "Prior tries",
+ "每条都经过 walk-forward / 留出段 / 多重检验。判定口径：超额收益置信区间下界 &gt; 0。": "Each one went through walk-forward, a holdout segment, and multiple-testing correction. The bar: lower bound of the excess-return CI above zero.",
+ "每跑一次检验就留一条记录：用了什么参数、结果多少、卡在哪一道坎。失败的也记 —— 因为「我到底试过几次」决定了这次的好看是真本事还是碰巧。": "Every run leaves a record: parameters, result, and which gate it failed. Failures are recorded too, because how many times you tried decides whether a good-looking result is skill or luck.",
+ "没找到，换个说法试试。": "Nothing found - try different wording.",
+ "没有一个能证明自己不是运气。": "none of them proved itself more than luck.",
+ "波动": "Vol",
+ "生成中…（要算结构，约 1–3 秒）": "Generating… (computing structure, 1-3s)",
+ "生成报告": "Generate report",
+ "用了多少数据": "Data used",
+ "用法": "Usage",
+ "申请": "requested",
+ "目前状态：四条方向都试过了，": "Current state: four approaches tested,",
+ "看到了什么": "What it saw",
+ "看懂这份报告需要的词，全在这儿。页面和报告里的蓝色虚线下划线都可以点。": "Every term you need to read the report lives here. Blue dashed underlines are clickable.",
+ "看画像 →": "View profile →",
+ "研究工具 · 不构成投资建议": "Research instrument - not investment advice",
+ "第一步 · 拉数据": "Step 1 - Fetch data",
+ "第三步 · 检验方向": "Step 3 - Test the idea",
+ "第二步 · 看结构": "Step 2 - Read the structure",
+ "类型": "Type",
+ "系统会拿 2021 年之后的数据考它一次（这段时间不许参与出题）， 算出一个「这个结果有多大概率是运气」的数字。": "The system tests it once on data after 2021 (that period never informs the design) and reports how likely the result is to be luck.",
+ "累计": "Total",
+ "累计 ": "Total ",
+ "结构": "Structure",
+ "结论": "Verdict",
+ "缓存文件（按体积前 40）": "Cached files (top 40 by size)",
+ "编号": "ID",
+ "缺失": "missing",
+ "美股：yfinance 直连会被限流，必须走代理；A 股：akshare 直连，但要求绕过系统代理（代码已处理）。 加密：本机被墙，大概率失败。已退市的票免费数据拿不到 —— 这是幸存者偏差的来源。": "US: yfinance rate-limits direct connections, use a proxy. A-shares: akshare works directly but must bypass the system proxy (handled). Crypto: blocked on many networks. Delisted tickers are not available for free - that is where survivorship bias comes from.",
+ "而反转经多重检验校正后同样不显著。": "and reversal is not significant after multiple-testing correction either.",
+ "自动": "Auto",
+ "行": " rows",
+ "行价格非正被丢弃": " rows dropped for non-positive prices",
+ "行数": "Lines",
+ "行，丢弃非正价": " rows; dropped non-positive prices: ",
+ "计算中…": "Computing…",
+ "请填代码，例如 MYSTOCK": "Enter a ticker, e.g. MYSTOCK",
+ "账本": "log",
+ "账本 ": "log ",
+ "账本是空的": "The log is empty",
+ "走到了最后。": " made it through.",
+ "起止日期": "Date range",
+ "超额 t": "Excess t",
+ "趋势型": "trending",
+ "跑过的检验": "Tests run",
+ "跟「买了就放着不动」相比，多赚的那部分有多大概率不是运气": "how likely the excess return over buy-and-hold is not luck",
+ "路径判定": "Approach verdicts",
+ "输入一个股票代码，看它值不值得继续研究": "Enter a ticker. Find out whether it deserves more research.",
+ "输入代码（如 AAPL、600519），等 3–10 秒，自动下载十年日线并检查质量。": "Enter a ticker (AAPL, 600519). Three to ten seconds later you have ten years of daily bars, quality-checked.",
+ "输入代码，如 AAPL / 600519": "Ticker, e.g. AAPL / 600519",
+ "过不了 95% 就判不通过 —— 而且不许改参数重跑，": "Below the 95% bar it fails - and you may not tweak parameters and retry,",
+ "过去 5 个月跌幅最大的 3 只，未来 1 个月跑赢等权": "the 3 worst performers over 5 months beat equal-weight over the next month",
+ "运行": "Run",
+ "运行中…": "Running…",
+ "运行结果": "Run result",
+ "还没有假设卡 —— 在下面「新建卡」里写第一张": "No cards yet - write the first one in \"New test\" below",
+ "还没有可下载的报告": "No report to download yet",
+ "还没有报告。上面输入代码就能生成第一份。": "No reports yet. Enter a ticker above to generate the first one.",
+ "这不是坏消息 —— 它替你把学费省下来了。": "That is not bad news - it saved you the tuition.",
+ "这个概率要过 95% 才算数。过不了，它就老实说「不知道」——": "It has to clear 95%. Below that it says \"unknown\" -",
+ "这个概率要过 95% 才算数。过不了，它就老实说「不知道」—— ": "It has to clear 95%. Below that it says \"unknown\" - ",
+ "这是它唯一的价值：不会替你编一个答案": "that is its only value: it will not invent an answer for you",
+ "这里做的事很简单：": "The idea is simple:",
+ "选一只已经入库的股票，生成一份决策用的报告：数据靠不靠谱、历史上是趋势还是震荡、接下来能试哪个方向。": "Pick a ticker you already have data for and generate a decision report: is the data trustworthy, has it trended or chopped, and what is worth testing next.",
+ "选股": "Names",
+ "通过": "PASS",
+ "通过率偏高，检查卡片是否写得太松。": "Pass rate looks high - check whether the cards are too loose.",
+ "通过的方向": "Approaches passed",
+ "量化研究台": "Quant Research Console",
+ "预测（一句话）": "Prediction (one line)",
+ "， 立即可以被验证器使用。校验不通过会明确告诉你哪一项不合格，不会偷偷修补数据。": " and is immediately usable. On failure it names the failing check - it never silently patches your data.",
+ "；去重": "; duplicates removed: ",
+ "；去重 ": "; duplicates removed: "
+};
+
+var LANG = (function(){
+  var saved = null;
+  try { saved = localStorage.getItem('ui-lang'); } catch(e){}
+  if (saved === 'zh' || saved === 'en') return saved;
+  var nav = (navigator.language || 'zh').toLowerCase();
+  return nav.indexOf('zh') === 0 ? 'zh' : 'en';
+})();
+
+var I18N_KEYS = null, I18N_EXACT = null;
+function i18nNorm(s){ return String(s).replace(/\s+/g, ' ').trim(); }
+function i18nBuild(){
+  if (I18N_KEYS) return;
+  I18N_EXACT = {};
+  Object.keys(I18N_EN).forEach(function(k){ I18N_EXACT[i18nNorm(k)] = I18N_EN[k]; });
+  I18N_KEYS = Object.keys(I18N_EN).filter(function(k){ return k.length >= 8; })
+    .sort(function(a, b){ return b.length - a.length; });
+}
+var CJK = /[\u4e00-\u9fff]/;
+function trText(s){
+  if (!s || !CJK.test(s)) return s;
+  i18nBuild();
+  var whole = I18N_EXACT[i18nNorm(s)];
+  if (whole !== undefined) return whole;               // 整句精确命中
+  var out = s;
+  for (var i = 0; i < I18N_KEYS.length; i++){          // 长句自由替换
+    var k = I18N_KEYS[i];
+    if (out.indexOf(k) >= 0) out = out.split(k).join(I18N_EN[k]);
+  }
+  Object.keys(I18N_EN).forEach(function(k){            // 短键只在边界匹配
+    if (k.length >= 8) return;
+    var re = new RegExp('(^|[^\\u4e00-\\u9fff])(' + k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')(?![\\u4e00-\\u9fff])', 'g');
+    out = out.replace(re, function(_m, pre){ return pre + I18N_EN[k]; });
+  });
+  return out;
+}
+var I18N_BUSY = false;
+function i18nWalk(node){
+  if (node.nodeType === 3){
+    var t = trText(node.nodeValue);
+    if (t !== node.nodeValue) node.nodeValue = t;
+    return;
+  }
+  if (node.nodeType !== 1) return;
+  var tag = node.tagName;
+  if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT') return;
+  ['placeholder','title','aria-label'].forEach(function(a){
+    if (node.hasAttribute && node.hasAttribute(a)){
+      var v = node.getAttribute(a), nv = trText(v);
+      if (nv !== v) node.setAttribute(a, nv);
+    }
+  });
+  for (var c = node.firstChild; c; c = c.nextSibling) i18nWalk(c);
+}
+function applyI18n(){
+  if (LANG !== 'en') return;
+  if (document.documentElement.lang !== 'en') document.documentElement.lang = 'en';
+  I18N_BUSY = true;
+  try {
+    i18nWalk(document.body);
+    var title = trText(document.title);
+    if (title !== document.title) document.title = title;
+  } finally { I18N_BUSY = false; }
+}
+function setLang(l){
+  try { localStorage.setItem('ui-lang', l); } catch(e){}
+  location.reload();
+}
+
 var VIEWS = [
   ["overview","概览"],
   ["data","数据分析"],
@@ -375,6 +690,23 @@ function show(v){
   if(v==='cards') loadCards();
   if(v==='reports') loadReportList();
   if(v==='glossary') loadGlossary();
+/* 语言初始化 */
+(function initLang(){
+  var en = document.getElementById('langEn'), zh = document.getElementById('langZh');
+  if (en) en.onclick = function(){ setLang('en'); };
+  if (zh) zh.onclick = function(){ setLang('zh'); };
+  if (LANG === 'en' && en) en.classList.add('on');
+  if (LANG === 'zh' && zh) zh.classList.add('on');
+  if (LANG !== 'en') return;
+  applyI18n();
+  var pending = null;
+  var mo = new MutationObserver(function(){
+    if (I18N_BUSY) return;
+    if (pending) clearTimeout(pending);
+    pending = setTimeout(function(){ pending = null; applyI18n(); }, 30);
+  });
+  mo.observe(document.body, {childList: true, subtree: true, characterData: true});
+})();
 }
 
 /* ---------- 概览 ---------- */
@@ -913,6 +1245,23 @@ function loadGlossary(){
 if (el('g-q')) el('g-q').oninput = function(){ renderGlossary(this.value); };
 loadOverview();loadPaths();loadCards();loadReportList();
 loadGlossary();
+/* 语言初始化 */
+(function initLang(){
+  var en = document.getElementById('langEn'), zh = document.getElementById('langZh');
+  if (en) en.onclick = function(){ setLang('en'); };
+  if (zh) zh.onclick = function(){ setLang('zh'); };
+  if (LANG === 'en' && en) en.classList.add('on');
+  if (LANG === 'zh' && zh) zh.classList.add('on');
+  if (LANG !== 'en') return;
+  applyI18n();
+  var pending = null;
+  var mo = new MutationObserver(function(){
+    if (I18N_BUSY) return;
+    if (pending) clearTimeout(pending);
+    pending = setTimeout(function(){ pending = null; applyI18n(); }, 30);
+  });
+  mo.observe(document.body, {childList: true, subtree: true, characterData: true});
+})();
 </script>
 </body>
 </html>
