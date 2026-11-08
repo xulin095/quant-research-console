@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 import sys
 
 import pandas as pd
-import requests
 
 from config import PROXY
 from data.base import DataError, DataFetcher
@@ -16,6 +15,7 @@ class CryptoFetcher(DataFetcher):
             cursor = int(datetime.fromisoformat(start).replace(tzinfo=timezone.utc).timestamp() * 1000)
             stop = int(datetime.fromisoformat(end).replace(tzinfo=timezone.utc).timestamp() * 1000)
             records = []
+            import requests                     # 延迟导入
             session = requests.Session()
             session.trust_env = False
             proxies = {"http": PROXY, "https": PROXY} if PROXY else None

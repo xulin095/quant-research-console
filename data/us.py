@@ -1,5 +1,4 @@
 import pandas as pd
-import yfinance as yf
 import io
 import os
 import sys
@@ -10,6 +9,8 @@ from data.base import DataError, DataFetcher
 
 
 def download_with_proxy(symbol, start, end):
+    # 延迟导入：不让「没装 yfinance」挡住只是想 import 本项目的人
+    import yfinance as yf
     names = ("HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY", "no_proxy")
     original = {name: os.environ.get(name) for name in names}
     if PROXY:

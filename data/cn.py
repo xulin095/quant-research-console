@@ -1,4 +1,3 @@
-import akshare as ak
 import pandas as pd
 import sys
 
@@ -10,9 +9,10 @@ class CNFetcher(DataFetcher):
 
     def get_history(self, symbol: str, start: str, end: str) -> pd.DataFrame:
         try:
+            import akshare as ak   # 延迟导入：见 data/us.py 同样理由
             raw = ak.stock_zh_a_hist(symbol=symbol.upper(), period="daily",
                                      start_date=start.replace("-", ""),
-                                     end_date=end.replace("-", ""), adjust="qfq")
+                                     end_date=end.replace("-", ""), adjust="hfq")
             raw = raw.rename(columns={"日期": "date", "开盘": "open", "最高": "high",
                                       "最低": "low", "收盘": "close", "成交量": "volume"})
             raw["date"] = pd.to_datetime(raw["date"]).dt.strftime("%Y-%m-%d")
