@@ -605,7 +605,12 @@ function loadData(){
 
 /* ---------- 结构画像 ---------- */
 function loadProfile(sym){
-  if(!sym){alert('先填代码');return;}
+  if(!sym){
+    el('profResult').innerHTML='<span class="hint" style="margin:0">'+
+      '先在上面填一个代码（例如刚上传的那只），再点「分析结构」。</span>';
+    el('p-symbol').focus();
+    return;
+  }
   el('profResult').innerHTML='<span class="loading">计算中…</span>';
   api('/api/profile?symbol='+encodeURIComponent(sym)).then(function(r){
     if(r.error){el('profResult').innerHTML='<span class="badge err">'+esc(r.error)+'</span>';return;}
@@ -708,6 +713,7 @@ function uploadData(){
       '；去重 '+r.dedup+' 行，丢弃非正价 '+r.dropped_bad_price+' 行</span>'+
       '<div class="hint">'+esc(r.hint)+'</div></div>';
     loadData();
+    el('p-symbol').value=sym; loadProfile(sym);   // 上传成功就顺手画像
   });
 }
 el('btnUpload').onclick=uploadData;
