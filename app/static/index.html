@@ -130,34 +130,30 @@ select.w{width:auto;min-width:220px}
 </aside>
 <main>
 
-  <section class="view on" id="v-overview">
-    <h2 class="page">概览</h2>
-    <p class="sub" id="ovSub">加载中…</p>
-    <div class="banner" id="ovBanner"></div>
-    <div class="grid g4" id="ovStats"></div>
-    <div class="grid g2" style="margin-top:14px">
-      <div class="box"><h3>研究时间线</h3><ul class="tl" id="ovTimeline"></ul></div>
-      <div class="box"><h3>结论</h3><div id="ovConclusion" style="font-size:13.5px;line-height:1.8"></div></div>
-    </div>
-  </section>
+    <section class="view on" id="v-overview">
+    <h2 class="page">输入一个股票代码，看它值不值得继续研究</h2>
+    <p class="sub">它会告诉你三件事：数据够不够用、这只票过去是「顺着走」还是「来回摆」、以及你想到的那个方向到底是真有用，还是只是看着像。</p>
 
-  <section class="view" id="v-pipeline">
-    <h2 class="page">四棒流水线</h2>
-    <p class="sub">研究员 → 架构师 → 开发者 → 质检员。每棒的产物都是真实文件，体量为实测。</p>
-    <div class="grid g2" id="plRoles"></div>
+    <div class="grid g3">
+      <div class="box"><h3>第一步 · 拉数据</h3>
+        <p style="margin:0 0 10px;font-size:13px;color:var(--dim)">输入代码（如 AAPL、600519），等 3–10 秒，自动下载十年日线并检查质量。</p>
+        <button class="ghost" onclick="show('data')">去拉数据 →</button></div>
+      <div class="box"><h3>第二步 · 看结构</h3>
+        <p style="margin:0 0 10px;font-size:13px;color:var(--dim)">拉完立刻出画像：这只票历史上是趋势型还是均值回归型，该往哪个方向想。</p>
+        <button class="ghost" onclick="show('data')">看画像 →</button></div>
+      <div class="box"><h3>第三步 · 检验方向</h3>
+        <p style="margin:0 0 10px;font-size:13px;color:var(--dim)">把你的判断写成一张卡，跑一次。过不了就是过不了，系统不会替你圆场。</p>
+        <button class="ghost" onclick="show('cards')">去检验 →</button></div>
+    </div>
+
+    <div class="grid g4" id="ovStats" style="margin-top:14px"></div>
+
     <div class="box" style="margin-top:14px">
-
-      <h3>为什么这样分工</h3>
-      <div class="hint" style="font-size:13px;color:var(--dim)">
-        关键不是「谁更强」，而是<b style="color:var(--fg)">让下游看不到上游的借口</b>：
-        一棒一会话、交接只通过文件、质检员禁止与开发者同源。
-        第 4 棒抓到 8 个问题，其中「裁判把字符数标成字节」这类缺陷，
-        只有独立审查才发现得了。
-      </div>
+      <h3>它凭什么可信</h3>
+      <div id="ovConclusion" style="font-size:13.5px;line-height:1.9"></div>
     </div>
   </section>
-
-  <section class="view" id="v-paths">
+<section class="view" id="v-paths">
     <h2 class="page">四条路径的实测结论</h2>
     <p class="sub">每条都经过 walk-forward / 留出段 / 多重检验。判定口径：超额收益置信区间下界 &gt; 0。</p>
     <div class="box"><h3>路径判定</h3><table id="pathTable"></table></div>
@@ -172,8 +168,19 @@ select.w{width:auto;min-width:220px}
   </section>
 
   <section class="view" id="v-cards">
-    <h2 class="page">假设卡</h2>
-    <p class="sub">一张卡 = 一个冻结的假设。参数一经运行不可修改，想试新参数请新建卡。</p>
+    <h2 class="page">假设检验</h2>
+    <p class="sub">这里做的事很简单：<b>你有一个说法，让历史数据来判它一次。</b></p>
+    <div class="box" style="margin-bottom:14px">
+      <h3>举个例子</h3>
+      <div style="font-size:13.5px;line-height:1.9;color:var(--dim)">
+        你观察到「A 股里，过去半年跌得最狠的几只，下个月往往会反弹」。<br>
+        于是写一条检验：<b style="color:var(--fg)">市场＝A股，方向＝买跌得多的，回看＝6 个月，买前 3 名</b>。<br>
+        系统会拿 2021 年之后的数据考它一次（这段时间不许参与出题），
+        算出一个「这个结果有多大概率是运气」的数字。<br>
+        <b style="color:var(--fg)">过不了 95% 就判不通过 —— 而且不许改参数重跑，</b>
+        改了就等于换一道题。想试别的，请新建一条。
+      </div>
+    </div>
     <div class="box"><h3>已有卡</h3><table id="cardTable"></table></div>
     <div class="box" id="runBox" style="margin-top:14px;display:none">
       <h3>运行结果</h3>
@@ -183,7 +190,7 @@ select.w{width:auto;min-width:220px}
         <pre id="runOut"></pre></details>
     </div>
     <div class="box" style="margin-top:14px">
-      <h3>新建卡</h3>
+      <h3>新建一条检验</h3>
       <div class="grid g3">
         <div><label>编号</label><input id="f-id" placeholder="HK-003"></div>
         <div><label>类型</label><select id="f-kind">
@@ -192,30 +199,24 @@ select.w{width:auto;min-width:220px}
         <div><label>方向</label><select id="f-dir">
           <option value="reversal">reversal 买跌得多</option>
           <option value="momentum">momentum 买涨得多</option></select></div>
-        <div><label>回看（月）</label><input id="f-lb" type="number" value="5" min="1" max="12"></div>
-        <div><label>选股数</label><input id="f-top" type="number" value="3" min="1" max="20"></div>
+        <div><label>回看几个月</label><input id="f-lb" type="number" value="5" min="1" max="12"></div>
+        <div><label>买前几名</label><input id="f-top" type="number" value="3" min="1" max="20"></div>
         <div><label>成本（单边）</label><input id="f-cost" value="0.0008"></div>
       </div>
       <label>机制（必须能说出「谁在亏钱」）</label>
       <textarea id="f-mech" rows="2" placeholder="散户追涨导致短期定价过度，随后回吐"></textarea>
       <label>预测（一句话）</label>
       <textarea id="f-claims" rows="2" placeholder="过去 5 个月跌幅最大的 3 只，未来 1 个月跑赢等权"></textarea>
-      <div class="hint">不通过就淘汰，<b style="color:var(--fg)">不许回来改 lookback 重试</b>。</div>
+      <div class="hint">不通过就淘汰。<b style="color:var(--fg)">不许回来改回看月数重试</b> —— 那等于换一道题。</div>
       <div style="margin-top:14px"><button class="act" id="btnSave">保存卡</button></div>
     </div>
   </section>
 
   <section class="view" id="v-ledger">
-    <h2 class="page">账本</h2>
-    <p class="sub">每试一次就记一笔，失败的也记。因为「我到底试过几次」决定了：这一次的好看，是真本事还是碰巧。</p>
+    <h2 class="page">工作日志</h2>
+    <p class="sub">每跑一次检验就留一条记录：用了什么参数、结果多少、卡在哪一道坎。失败的也记 —— 因为「我到底试过几次」决定了这次的好看是真本事还是碰巧。</p>
     <div class="box"><h3>检验记录</h3><table id="ledgerTable"></table>
       <div class="hint" id="ledgerHint"></div></div>
-  </section>
-
-  <section class="view" id="v-tools">
-    <h2 class="page">工具链</h2>
-    <p class="sub">每个工具都能独立运行，也能被统一入口调起。</p>
-    <div class="box"><h3>命令行工具</h3><table id="toolTable"></table></div>
   </section>
 
   <section class="view" id="v-reports">
@@ -315,9 +316,13 @@ select.w{width:auto;min-width:220px}
 <div id="tip" class="tip"></div>
 <script>
 var VIEWS = [
-  ["overview","概览"],["pipeline","四棒流水线"],["paths","路径结果"],
-  ["cards","假设卡"],["ledger","账本"],["tools","工具链"],
-  ["glossary","术语"],["reports","报告"],["data","数据"]
+  ["overview","概览"],
+  ["data","数据分析"],
+  ["reports","分析报告"],
+  ["paths","已验证方向"],
+  ["cards","假设检验"],
+  ["ledger","工作日志"],
+  ["glossary","术语"]
 ];
 var S = {cards:[], results:null};
 
@@ -361,42 +366,29 @@ function show(v){
 /* ---------- 概览 ---------- */
 function loadOverview(){
   api('/api/overview').then(function(d){
-    el('ovSub').textContent = '生成于 ' + (d.generated||'—') + ' · 账本累计 ' +
-      d.registry.total + ' 次检验';
-    el('ovBanner').innerHTML =
-      '<div class="big">'+d.paths_passed+' / '+d.paths_tested+'</div>'+
-      '<div class="txt"><b>'+(d.headline||'')+'</b><br>'+
-      '说人话：四条路都试过了，没有一条能证明「比别人多赚的钱不是运气」。所以现在没有可以拿真钱去试的东西 —— 这不是坏消息，它替你把学费省下来了。</div>';
+    var passes = d.registry.passed;
     el('ovStats').innerHTML = [
-      ['路径通过', d.paths_passed+' / '+d.paths_tested, '四条：时序 / 决策层 / 动量 / 反转'],
-      ['账本累计', d.registry.total, '通过 '+d.registry.passed+'（'+
-        (d.registry.pass_rate*100).toFixed(0)+'%）'],
-      ['诚实宇宙', d.data.universe_size+' 只', '覆盖率 '+
-        (d.data.coverage?Math.round(d.data.coverage*100)+'%':'—')+'，含退市 '+
-        (d.data.delisted_ok==null?'—':d.data.delisted_ok)],
-      ['本地缓存', d.data.cache_files+' 个 CSV', '市场：'+(d.data.markets||[]).join(' / ')]
+      ['已入库标的', d.data.cache_files + ' 个', '本地缓存的 CSV 文件数'],
+      ['跑过的检验', d.registry.total + ' 次', '通过 ' + passes + ' 次'],
+      ['通过的方向', d.paths_passed + ' / ' + d.paths_tested, '四条路里过了几条'],
+      ['数据覆盖率', d.data.coverage ? Math.round(d.data.coverage*100) + '%' : '—',
+       '申请 ' + (d.data.requested||'—') + ' 只，拿到 ' + d.data.universe_size + ' 只']
     ].map(function(s){
       return '<div class="box stat"><div class="k">'+s[0]+'</div><div class="v">'+
         esc(s[1])+'</div><div class="n">'+esc(s[2])+'</div></div>';
     }).join('');
-    el('ovConclusion').innerHTML = esc(d.conclusion||'') +
-      '<div style="margin-top:14px;padding:12px 14px;background:var(--panel2);border-radius:8px;line-height:1.85">'+
-      '<b style="color:var(--fg)">我们怎么算「通过」？</b><br>'+
-      '不比「有没有赚钱」，比「跟<b>买了就放着不动</b>相比，多赚的那部分有多大概率不是运气」。<br>'+
-      '这个概率要过 95% 才算数。过不了，就老实说「不知道」—— 这是这套系统唯一的价值：<b>它不会替你编一个答案</b>。'+
-      '</div>';
-    el('sideFoot').innerHTML = '路径 '+d.paths_passed+'/'+d.paths_tested+
-      ' 通过<br>账本 '+d.registry.total+' 次<br>缓存 '+d.data.cache_files+' 个文件';
-  });
-  api('/api/results').then(function(r){
-    S.results=r;
-    el('ovTimeline').innerHTML = (r.timeline||[]).map(function(t){
-      return '<li class="'+(t.ok?'ok':'bad')+'"><span class="d">'+esc(t.date)+
-        '</span>'+esc(t.event)+'</li>';
-    }).join('');
+
+    el('ovConclusion').innerHTML =
+      '它不比「有没有赚钱」，比的是：<b style="color:var(--fg)">跟「买了就放着不动」相比，多赚的那部分有多大概率不是运气</b>。<br>'+
+      '这个概率要过 95% 才算数。过不了，它就老实说「不知道」—— <b style="color:var(--fg)">这是它唯一的价值：不会替你编一个答案</b>。<br>'+
+      '<span style="color:var(--dim2)">目前状态：四条方向都试过了，' +
+      (passes === 0 ? '没有一个能证明自己不是运气。' : '有 ' + passes + ' 个走到了最后。') +
+      '这不是坏消息 —— 它替你把学费省下来了。</span>';
+
+    el('sideFoot').innerHTML = '已入库 ' + d.data.cache_files + ' 个<br>检验 ' +
+      d.registry.total + ' 次<br>通过 ' + passes + ' 次';
   });
 }
-
 /* ---------- 流水线 ---------- */
 function loadPipeline(){
   api('/api/pipeline').then(function(d){
@@ -877,7 +869,7 @@ function loadGlossary(){
   });
 }
 if (el('g-q')) el('g-q').oninput = function(){ renderGlossary(this.value); };
-loadOverview();loadPipeline();loadPaths();loadCards();
+loadOverview();loadPaths();loadCards();
 loadGlossary();
 </script>
 </body>
