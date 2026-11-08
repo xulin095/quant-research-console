@@ -313,7 +313,7 @@ function loadOverview(){
     el('ovBanner').innerHTML =
       '<div class="big">'+d.paths_passed+' / '+d.paths_tested+'</div>'+
       '<div class="txt"><b>'+(d.headline||'')+'</b><br>'+
-      '判定口径：超额收益的 95% 置信区间下界 &gt; 0。任何一条过线，才谈仓位与产品。</div>';
+      '说人话：四条路都试过了，没有一条能证明「比别人多赚的钱不是运气」。所以现在没有可以拿真钱去试的东西 —— 这不是坏消息，它替你把学费省下来了。</div>';
     el('ovStats').innerHTML = [
       ['路径通过', d.paths_passed+' / '+d.paths_tested, '四条：时序 / 决策层 / 动量 / 反转'],
       ['账本累计', d.registry.total, '通过 '+d.registry.passed+'（'+
@@ -629,6 +629,7 @@ function loadProfile(sym){
         .map(function(x){return '<div class="n"><div class="k">'+x[0]+
           '</div><div class="v">'+esc(x[1])+'</div></div>';}).join('')+'</div>'+
       '<div style="margin-top:12px;font-size:13px">'+
+      '<div class=\"hint\" style=\"margin:10px 0 0\">lag1 自相关：今天的涨跌跟昨天还有没有关系（正＝顺着走，负＝往回摆）。VR：波动越滚越大还是被吃掉。z：把日期打乱重来 120 次，看这个值有多难得 —— 超过 2 才算「不是碰巧」。</div>'+
         r.evidence.map(function(w){return '<div>· '+esc(w)+'</div>';}).join('')+'</div>'+
       '<div style="margin-top:10px;font-size:13px;color:var(--dim)"><b style="color:var(--fg)">提示：</b>'+
         esc(r.hint)+
