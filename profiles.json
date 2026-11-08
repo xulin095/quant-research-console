@@ -1,8 +1,8 @@
 {
   "summary": {
-    "趋势型": 19,
-    "均值回归型": 29,
-    "无明显结构": 53
+    "趋势型": 8,
+    "均值回归型": 15,
+    "无明显结构": 78
   },
   "rows": [
     {
@@ -142,380 +142,6 @@
       ]
     },
     {
-      "symbol": "000562",
-      "market": "cn",
-      "file": "cn_000562_2010-01-01_2025-12-31.csv",
-      "rows": 996,
-      "years": 3.95,
-      "annual_return": 0.275576,
-      "annual_vol": 0.425955,
-      "max_drawdown": 0.563824,
-      "autocorr1": 0.0697,
-      "vr5": 1.209,
-      "vr20": 1.202,
-      "structure": "趋势型",
-      "allowed_directions": [
-        "momentum"
-      ]
-    },
-    {
-      "symbol": "688426",
-      "market": "cn",
-      "file": "cn_688426_2010-01-01_2025-12-31.csv",
-      "rows": 776,
-      "years": 3.08,
-      "annual_return": -0.123128,
-      "annual_vol": 0.555163,
-      "max_drawdown": 0.658737,
-      "autocorr1": 0.0892,
-      "vr5": 1.254,
-      "vr20": 1.202,
-      "structure": "趋势型",
-      "allowed_directions": [
-        "momentum"
-      ]
-    },
-    {
-      "symbol": "000760",
-      "market": "cn",
-      "file": "cn_000760_2010-01-01_2025-12-31.csv",
-      "rows": 2235,
-      "years": 8.77,
-      "annual_return": null,
-      "annual_vol": 0.718416,
-      "max_drawdown": 0.998304,
-      "autocorr1": 0.2891,
-      "vr5": 1.434,
-      "vr20": 1.197,
-      "structure": "趋势型",
-      "allowed_directions": [
-        "momentum"
-      ]
-    },
-    {
-      "symbol": "920174",
-      "market": "cn",
-      "file": "cn_920174_2010-01-01_2025-12-31.csv",
-      "rows": 1048,
-      "years": 4.15,
-      "annual_return": 0.570545,
-      "annual_vol": 0.731395,
-      "max_drawdown": 0.759899,
-      "autocorr1": 0.2167,
-      "vr5": 1.315,
-      "vr20": 1.19,
-      "structure": "趋势型",
-      "allowed_directions": [
-        "momentum"
-      ]
-    },
-    {
-      "symbol": "688249",
-      "market": "cn",
-      "file": "cn_688249_2010-01-01_2025-12-31.csv",
-      "rows": 648,
-      "years": 2.57,
-      "annual_return": 0.222618,
-      "annual_vol": 0.467955,
-      "max_drawdown": 0.454877,
-      "autocorr1": 0.0054,
-      "vr5": 1.157,
-      "vr20": 1.136,
-      "structure": "趋势型",
-      "allowed_directions": [
-        "momentum"
-      ]
-    },
-    {
-      "symbol": "002961",
-      "market": "cn",
-      "file": "cn_002961_2010-01-01_2025-12-31.csv",
-      "rows": 1533,
-      "years": 6.08,
-      "annual_return": 0.234037,
-      "annual_vol": 0.481808,
-      "max_drawdown": 0.727471,
-      "autocorr1": 0.0909,
-      "vr5": 1.268,
-      "vr20": 1.086,
-      "structure": "趋势型",
-      "allowed_directions": [
-        "momentum"
-      ]
-    },
-    {
-      "symbol": "000887",
-      "market": "cn",
-      "file": "cn_000887_2010-01-01_2025-12-31.csv",
-      "rows": 3661,
-      "years": 14.52,
-      "annual_return": 0.104946,
-      "annual_vol": 0.422432,
-      "max_drawdown": 0.795689,
-      "autocorr1": 0.0879,
-      "vr5": 1.112,
-      "vr20": 1.057,
-      "structure": "趋势型",
-      "allowed_directions": [
-        "momentum"
-      ]
-    },
-    {
-      "symbol": "BA",
-      "market": "us",
-      "file": "us_BA_2010-01-01_2025-12-31.csv",
-      "rows": 4023,
-      "years": 15.96,
-      "annual_return": 0.105977,
-      "annual_vol": 0.358986,
-      "max_drawdown": 0.779201,
-      "autocorr1": 0.0531,
-      "vr5": 1.132,
-      "vr20": 1.043,
-      "structure": "趋势型",
-      "allowed_directions": [
-        "momentum"
-      ]
-    },
-    {
-      "symbol": "300499",
-      "market": "cn",
-      "file": "cn_300499_2010-01-01_2025-12-31.csv",
-      "rows": 2409,
-      "years": 9.56,
-      "annual_return": 0.197964,
-      "annual_vol": 0.591029,
-      "max_drawdown": 0.806822,
-      "autocorr1": 0.0611,
-      "vr5": 1.148,
-      "vr20": 1.041,
-      "structure": "趋势型",
-      "allowed_directions": [
-        "momentum"
-      ]
-    },
-    {
-      "symbol": "600671",
-      "market": "cn",
-      "file": "cn_600671_2010-01-01_2025-12-31.csv",
-      "rows": 3467,
-      "years": 13.75,
-      "annual_return": 0.027803,
-      "annual_vol": 0.440866,
-      "max_drawdown": 0.854498,
-      "autocorr1": 0.1043,
-      "vr5": 1.114,
-      "vr20": 0.981,
-      "structure": "趋势型",
-      "allowed_directions": [
-        "momentum"
-      ]
-    },
-    {
-      "symbol": "688338",
-      "market": "cn",
-      "file": "cn_688338_2010-01-01_2025-12-31.csv",
-      "rows": 1312,
-      "years": 5.2,
-      "annual_return": -0.260885,
-      "annual_vol": 0.382214,
-      "max_drawdown": 0.844988,
-      "autocorr1": 0.0803,
-      "vr5": 1.119,
-      "vr20": 0.976,
-      "structure": "趋势型",
-      "allowed_directions": [
-        "momentum"
-      ]
-    },
-    {
-      "symbol": "HPQ",
-      "market": "us",
-      "file": "us_HPQ_2010-01-01_2025-12-31.csv",
-      "rows": 4023,
-      "years": 15.96,
-      "annual_return": 0.026022,
-      "annual_vol": 0.342175,
-      "max_drawdown": 0.776644,
-      "autocorr1": -0.0361,
-      "vr5": 0.975,
-      "vr20": 0.898,
-      "structure": "均值回归型",
-      "allowed_directions": [
-        "reversal"
-      ]
-    },
-    {
-      "symbol": "CVX",
-      "market": "us",
-      "file": "us_CVX_2010-01-01_2025-12-31.csv",
-      "rows": 4023,
-      "years": 15.96,
-      "annual_return": 0.0846,
-      "annual_vol": 0.266285,
-      "max_drawdown": 0.557739,
-      "autocorr1": -0.063,
-      "vr5": 0.943,
-      "vr20": 0.886,
-      "structure": "均值回归型",
-      "allowed_directions": [
-        "reversal"
-      ]
-    },
-    {
-      "symbol": "AAPL",
-      "market": "us",
-      "file": "us_AAPL_2010-01-01_2025-12-31.csv",
-      "rows": 4023,
-      "years": 15.96,
-      "annual_return": 0.264903,
-      "annual_vol": 0.281736,
-      "max_drawdown": 0.437972,
-      "autocorr1": -0.0336,
-      "vr5": 0.929,
-      "vr20": 0.878,
-      "structure": "均值回归型",
-      "allowed_directions": [
-        "reversal"
-      ]
-    },
-    {
-      "symbol": "PYPL",
-      "market": "us",
-      "file": "us_PYPL_2010-01-01_2025-12-31.csv",
-      "rows": 2639,
-      "years": 10.47,
-      "annual_return": 0.046769,
-      "annual_vol": 0.380213,
-      "max_drawdown": 0.836677,
-      "autocorr1": -0.0484,
-      "vr5": 0.905,
-      "vr20": 0.878,
-      "structure": "均值回归型",
-      "allowed_directions": [
-        "reversal"
-      ]
-    },
-    {
-      "symbol": "QCOM",
-      "market": "us",
-      "file": "us_QCOM_2010-01-01_2025-12-31.csv",
-      "rows": 4023,
-      "years": 15.96,
-      "annual_return": 0.113182,
-      "annual_vol": 0.337382,
-      "max_drawdown": 0.450792,
-      "autocorr1": -0.0706,
-      "vr5": 0.912,
-      "vr20": 0.87,
-      "structure": "均值回归型",
-      "allowed_directions": [
-        "reversal"
-      ]
-    },
-    {
-      "symbol": "INTC",
-      "market": "us",
-      "file": "us_INTC_2010-01-01_2025-12-31.csv",
-      "rows": 4023,
-      "years": 15.96,
-      "annual_return": 0.065652,
-      "annual_vol": 0.349477,
-      "max_drawdown": 0.707973,
-      "autocorr1": -0.0732,
-      "vr5": 0.956,
-      "vr20": 0.859,
-      "structure": "均值回归型",
-      "allowed_directions": [
-        "reversal"
-      ]
-    },
-    {
-      "symbol": "VZ",
-      "market": "us",
-      "file": "us_VZ_2010-01-01_2025-12-31.csv",
-      "rows": 4023,
-      "years": 15.96,
-      "annual_return": 0.070352,
-      "annual_vol": 0.185989,
-      "max_drawdown": 0.412071,
-      "autocorr1": -0.0335,
-      "vr5": 0.928,
-      "vr20": 0.854,
-      "structure": "均值回归型",
-      "allowed_directions": [
-        "reversal"
-      ]
-    },
-    {
-      "symbol": "MMM",
-      "market": "us",
-      "file": "us_MMM_2010-01-01_2025-12-31.csv",
-      "rows": 4023,
-      "years": 15.96,
-      "annual_return": 0.086351,
-      "annual_vol": 0.236761,
-      "max_drawdown": 0.590973,
-      "autocorr1": -0.0442,
-      "vr5": 0.885,
-      "vr20": 0.843,
-      "structure": "均值回归型",
-      "allowed_directions": [
-        "reversal"
-      ]
-    },
-    {
-      "symbol": "CSCO",
-      "market": "us",
-      "file": "us_CSCO_2010-01-01_2025-12-31.csv",
-      "rows": 4023,
-      "years": 15.96,
-      "annual_return": 0.103557,
-      "annual_vol": 0.257341,
-      "max_drawdown": 0.498353,
-      "autocorr1": -0.0636,
-      "vr5": 0.899,
-      "vr20": 0.84,
-      "structure": "均值回归型",
-      "allowed_directions": [
-        "reversal"
-      ]
-    },
-    {
-      "symbol": "WMT",
-      "market": "us",
-      "file": "us_WMT_2010-01-01_2025-12-31.csv",
-      "rows": 4023,
-      "years": 15.96,
-      "annual_return": 0.144626,
-      "annual_vol": 0.196032,
-      "max_drawdown": 0.364351,
-      "autocorr1": -0.0494,
-      "vr5": 0.906,
-      "vr20": 0.84,
-      "structure": "均值回归型",
-      "allowed_directions": [
-        "reversal"
-      ]
-    },
-    {
-      "symbol": "GOOGL",
-      "market": "us",
-      "file": "us_GOOGL_2010-01-01_2025-12-31.csv",
-      "rows": 4023,
-      "years": 15.96,
-      "annual_return": 0.207078,
-      "annual_vol": 0.276736,
-      "max_drawdown": 0.443201,
-      "autocorr1": -0.0343,
-      "vr5": 0.924,
-      "vr20": 0.829,
-      "structure": "均值回归型",
-      "allowed_directions": [
-        "reversal"
-      ]
-    },
-    {
       "symbol": "ORCL",
       "market": "us",
       "file": "us_ORCL_2010-01-01_2025-12-31.csv",
@@ -578,23 +204,6 @@
       "autocorr1": -0.091,
       "vr5": 0.889,
       "vr20": 0.806,
-      "structure": "均值回归型",
-      "allowed_directions": [
-        "reversal"
-      ]
-    },
-    {
-      "symbol": "600276",
-      "market": "cn",
-      "file": "cn_600276_2015-01-01_2025-12-31.csv",
-      "rows": 2672,
-      "years": 10.6,
-      "annual_return": 0.213998,
-      "annual_vol": 0.362036,
-      "max_drawdown": 0.716969,
-      "autocorr1": 0.0156,
-      "vr5": 0.876,
-      "vr20": 0.805,
       "structure": "均值回归型",
       "allowed_directions": [
         "reversal"
@@ -669,23 +278,6 @@
       ]
     },
     {
-      "symbol": "000418",
-      "market": "cn",
-      "file": "cn_000418_2010-01-01_2025-12-31.csv",
-      "rows": 2206,
-      "years": 8.75,
-      "annual_return": 0.173927,
-      "annual_vol": 0.38727,
-      "max_drawdown": 0.629491,
-      "autocorr1": -0.0056,
-      "vr5": 0.883,
-      "vr20": 0.78,
-      "structure": "均值回归型",
-      "allowed_directions": [
-        "reversal"
-      ]
-    },
-    {
       "symbol": "GILD",
       "market": "us",
       "file": "us_GILD_2010-01-01_2025-12-31.csv",
@@ -731,23 +323,6 @@
       "autocorr1": -0.0416,
       "vr5": 0.89,
       "vr20": 0.724,
-      "structure": "均值回归型",
-      "allowed_directions": [
-        "reversal"
-      ]
-    },
-    {
-      "symbol": "301100",
-      "market": "cn",
-      "file": "cn_301100_2010-01-01_2025-12-31.csv",
-      "rows": 980,
-      "years": 3.88,
-      "annual_return": -0.202538,
-      "annual_vol": 0.465152,
-      "max_drawdown": 0.772425,
-      "autocorr1": -0.0262,
-      "vr5": 0.862,
-      "vr20": 0.697,
       "structure": "均值回归型",
       "allowed_directions": [
         "reversal"
@@ -822,6 +397,81 @@
       ]
     },
     {
+      "symbol": "000562",
+      "market": "cn",
+      "file": "cn_000562_2010-01-01_2025-12-31.csv",
+      "rows": 996,
+      "years": 3.95,
+      "annual_return": 0.275576,
+      "annual_vol": 0.425955,
+      "max_drawdown": 0.563824,
+      "autocorr1": 0.0697,
+      "vr5": 1.209,
+      "vr20": 1.202,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
+      "symbol": "688426",
+      "market": "cn",
+      "file": "cn_688426_2010-01-01_2025-12-31.csv",
+      "rows": 776,
+      "years": 3.08,
+      "annual_return": -0.123128,
+      "annual_vol": 0.555163,
+      "max_drawdown": 0.658737,
+      "autocorr1": 0.0892,
+      "vr5": 1.254,
+      "vr20": 1.202,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
+      "symbol": "000760",
+      "market": "cn",
+      "file": "cn_000760_2010-01-01_2025-12-31.csv",
+      "rows": 2235,
+      "years": 8.77,
+      "annual_return": null,
+      "annual_vol": 0.718416,
+      "max_drawdown": 0.998304,
+      "autocorr1": 0.2891,
+      "vr5": 1.434,
+      "vr20": 1.197,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
+      "symbol": "920174",
+      "market": "cn",
+      "file": "cn_920174_2010-01-01_2025-12-31.csv",
+      "rows": 1048,
+      "years": 4.15,
+      "annual_return": 0.570545,
+      "annual_vol": 0.731395,
+      "max_drawdown": 0.759899,
+      "autocorr1": 0.2167,
+      "vr5": 1.315,
+      "vr20": 1.19,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
+      "symbol": "688249",
+      "market": "cn",
+      "file": "cn_688249_2010-01-01_2025-12-31.csv",
+      "rows": 648,
+      "years": 2.57,
+      "annual_return": 0.222618,
+      "annual_vol": 0.467955,
+      "max_drawdown": 0.454877,
+      "autocorr1": 0.0054,
+      "vr5": 1.157,
+      "vr20": 1.136,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
       "symbol": "GE",
       "market": "us",
       "file": "us_GE_2010-01-01_2025-12-31.csv",
@@ -863,6 +513,21 @@
       "autocorr1": 0.03,
       "vr5": 1.068,
       "vr20": 1.088,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
+      "symbol": "002961",
+      "market": "cn",
+      "file": "cn_002961_2010-01-01_2025-12-31.csv",
+      "rows": 1533,
+      "years": 6.08,
+      "annual_return": 0.234037,
+      "annual_vol": 0.481808,
+      "max_drawdown": 0.727471,
+      "autocorr1": 0.0909,
+      "vr5": 1.268,
+      "vr20": 1.086,
       "structure": "无明显结构",
       "allowed_directions": []
     },
@@ -912,6 +577,21 @@
       "allowed_directions": []
     },
     {
+      "symbol": "000887",
+      "market": "cn",
+      "file": "cn_000887_2010-01-01_2025-12-31.csv",
+      "rows": 3661,
+      "years": 14.52,
+      "annual_return": 0.104946,
+      "annual_vol": 0.422432,
+      "max_drawdown": 0.795689,
+      "autocorr1": 0.0879,
+      "vr5": 1.112,
+      "vr20": 1.057,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
       "symbol": "NCLH",
       "market": "us",
       "file": "us_NCLH_2010-01-01_2025-12-31.csv",
@@ -923,6 +603,36 @@
       "autocorr1": 0.0647,
       "vr5": 1.056,
       "vr20": 1.051,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
+      "symbol": "BA",
+      "market": "us",
+      "file": "us_BA_2010-01-01_2025-12-31.csv",
+      "rows": 4023,
+      "years": 15.96,
+      "annual_return": 0.105977,
+      "annual_vol": 0.358986,
+      "max_drawdown": 0.779201,
+      "autocorr1": 0.0531,
+      "vr5": 1.132,
+      "vr20": 1.043,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
+      "symbol": "300499",
+      "market": "cn",
+      "file": "cn_300499_2010-01-01_2025-12-31.csv",
+      "rows": 2409,
+      "years": 9.56,
+      "annual_return": 0.197964,
+      "annual_vol": 0.591029,
+      "max_drawdown": 0.806822,
+      "autocorr1": 0.0611,
+      "vr5": 1.148,
+      "vr20": 1.041,
       "structure": "无明显结构",
       "allowed_directions": []
     },
@@ -1017,6 +727,21 @@
       "allowed_directions": []
     },
     {
+      "symbol": "600671",
+      "market": "cn",
+      "file": "cn_600671_2010-01-01_2025-12-31.csv",
+      "rows": 3467,
+      "years": 13.75,
+      "annual_return": 0.027803,
+      "annual_vol": 0.440866,
+      "max_drawdown": 0.854498,
+      "autocorr1": 0.1043,
+      "vr5": 1.114,
+      "vr20": 0.981,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
       "symbol": "CCL",
       "market": "us",
       "file": "us_CCL_2010-01-01_2025-12-31.csv",
@@ -1028,6 +753,21 @@
       "autocorr1": 0.0132,
       "vr5": 0.986,
       "vr20": 0.978,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
+      "symbol": "688338",
+      "market": "cn",
+      "file": "cn_688338_2010-01-01_2025-12-31.csv",
+      "rows": 1312,
+      "years": 5.2,
+      "annual_return": -0.260885,
+      "annual_vol": 0.382214,
+      "max_drawdown": 0.844988,
+      "autocorr1": 0.0803,
+      "vr5": 1.119,
+      "vr20": 0.976,
       "structure": "无明显结构",
       "allowed_directions": []
     },
@@ -1377,6 +1117,21 @@
       "allowed_directions": []
     },
     {
+      "symbol": "HPQ",
+      "market": "us",
+      "file": "us_HPQ_2010-01-01_2025-12-31.csv",
+      "rows": 4023,
+      "years": 15.96,
+      "annual_return": 0.026022,
+      "annual_vol": 0.342175,
+      "max_drawdown": 0.776644,
+      "autocorr1": -0.0361,
+      "vr5": 0.975,
+      "vr20": 0.898,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
       "symbol": "ALB",
       "market": "us",
       "file": "us_ALB_2010-01-01_2025-12-31.csv",
@@ -1392,6 +1147,21 @@
       "allowed_directions": []
     },
     {
+      "symbol": "CVX",
+      "market": "us",
+      "file": "us_CVX_2010-01-01_2025-12-31.csv",
+      "rows": 4023,
+      "years": 15.96,
+      "annual_return": 0.0846,
+      "annual_vol": 0.266285,
+      "max_drawdown": 0.557739,
+      "autocorr1": -0.063,
+      "vr5": 0.943,
+      "vr20": 0.886,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
       "symbol": "688297",
       "market": "cn",
       "file": "cn_688297_2010-01-01_2025-12-31.csv",
@@ -1403,6 +1173,36 @@
       "autocorr1": 0.0413,
       "vr5": 0.986,
       "vr20": 0.879,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
+      "symbol": "AAPL",
+      "market": "us",
+      "file": "us_AAPL_2010-01-01_2025-12-31.csv",
+      "rows": 4023,
+      "years": 15.96,
+      "annual_return": 0.264903,
+      "annual_vol": 0.281736,
+      "max_drawdown": 0.437972,
+      "autocorr1": -0.0336,
+      "vr5": 0.929,
+      "vr20": 0.878,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
+      "symbol": "PYPL",
+      "market": "us",
+      "file": "us_PYPL_2010-01-01_2025-12-31.csv",
+      "rows": 2639,
+      "years": 10.47,
+      "annual_return": 0.046769,
+      "annual_vol": 0.380213,
+      "max_drawdown": 0.836677,
+      "autocorr1": -0.0484,
+      "vr5": 0.905,
+      "vr20": 0.878,
       "structure": "无明显结构",
       "allowed_directions": []
     },
@@ -1437,6 +1237,21 @@
       "allowed_directions": []
     },
     {
+      "symbol": "QCOM",
+      "market": "us",
+      "file": "us_QCOM_2010-01-01_2025-12-31.csv",
+      "rows": 4023,
+      "years": 15.96,
+      "annual_return": 0.113182,
+      "annual_vol": 0.337382,
+      "max_drawdown": 0.450792,
+      "autocorr1": -0.0706,
+      "vr5": 0.912,
+      "vr20": 0.87,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
       "symbol": "601158",
       "market": "cn",
       "file": "cn_601158_2010-01-01_2025-12-31.csv",
@@ -1448,6 +1263,36 @@
       "autocorr1": 0.0296,
       "vr5": 1.007,
       "vr20": 0.862,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
+      "symbol": "INTC",
+      "market": "us",
+      "file": "us_INTC_2010-01-01_2025-12-31.csv",
+      "rows": 4023,
+      "years": 15.96,
+      "annual_return": 0.065652,
+      "annual_vol": 0.349477,
+      "max_drawdown": 0.707973,
+      "autocorr1": -0.0732,
+      "vr5": 0.956,
+      "vr20": 0.859,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
+      "symbol": "VZ",
+      "market": "us",
+      "file": "us_VZ_2010-01-01_2025-12-31.csv",
+      "rows": 4023,
+      "years": 15.96,
+      "annual_return": 0.070352,
+      "annual_vol": 0.185989,
+      "max_drawdown": 0.412071,
+      "autocorr1": -0.0335,
+      "vr5": 0.928,
+      "vr20": 0.854,
       "structure": "无明显结构",
       "allowed_directions": []
     },
@@ -1478,6 +1323,66 @@
       "autocorr1": -0.0202,
       "vr5": 0.975,
       "vr20": 0.844,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
+      "symbol": "MMM",
+      "market": "us",
+      "file": "us_MMM_2010-01-01_2025-12-31.csv",
+      "rows": 4023,
+      "years": 15.96,
+      "annual_return": 0.086351,
+      "annual_vol": 0.236761,
+      "max_drawdown": 0.590973,
+      "autocorr1": -0.0442,
+      "vr5": 0.885,
+      "vr20": 0.843,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
+      "symbol": "CSCO",
+      "market": "us",
+      "file": "us_CSCO_2010-01-01_2025-12-31.csv",
+      "rows": 4023,
+      "years": 15.96,
+      "annual_return": 0.103557,
+      "annual_vol": 0.257341,
+      "max_drawdown": 0.498353,
+      "autocorr1": -0.0636,
+      "vr5": 0.899,
+      "vr20": 0.84,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
+      "symbol": "WMT",
+      "market": "us",
+      "file": "us_WMT_2010-01-01_2025-12-31.csv",
+      "rows": 4023,
+      "years": 15.96,
+      "annual_return": 0.144626,
+      "annual_vol": 0.196032,
+      "max_drawdown": 0.364351,
+      "autocorr1": -0.0494,
+      "vr5": 0.906,
+      "vr20": 0.84,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
+      "symbol": "GOOGL",
+      "market": "us",
+      "file": "us_GOOGL_2010-01-01_2025-12-31.csv",
+      "rows": 4023,
+      "years": 15.96,
+      "annual_return": 0.207078,
+      "annual_vol": 0.276736,
+      "max_drawdown": 0.443201,
+      "autocorr1": -0.0343,
+      "vr5": 0.924,
+      "vr20": 0.829,
       "structure": "无明显结构",
       "allowed_directions": []
     },
@@ -1527,6 +1432,21 @@
       "allowed_directions": []
     },
     {
+      "symbol": "600276",
+      "market": "cn",
+      "file": "cn_600276_2015-01-01_2025-12-31.csv",
+      "rows": 2672,
+      "years": 10.6,
+      "annual_return": 0.213998,
+      "annual_vol": 0.362036,
+      "max_drawdown": 0.716969,
+      "autocorr1": 0.0156,
+      "vr5": 0.876,
+      "vr20": 0.805,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
       "symbol": "301122",
       "market": "cn",
       "file": "cn_301122_2010-01-01_2025-12-31.csv",
@@ -1553,6 +1473,21 @@
       "autocorr1": 0.083,
       "vr5": 1.005,
       "vr20": 0.781,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
+      "symbol": "000418",
+      "market": "cn",
+      "file": "cn_000418_2010-01-01_2025-12-31.csv",
+      "rows": 2206,
+      "years": 8.75,
+      "annual_return": 0.173927,
+      "annual_vol": 0.38727,
+      "max_drawdown": 0.629491,
+      "autocorr1": -0.0056,
+      "vr5": 0.883,
+      "vr20": 0.78,
       "structure": "无明显结构",
       "allowed_directions": []
     },
@@ -1613,6 +1548,21 @@
       "autocorr1": 0.0311,
       "vr5": 0.976,
       "vr20": 0.741,
+      "structure": "无明显结构",
+      "allowed_directions": []
+    },
+    {
+      "symbol": "301100",
+      "market": "cn",
+      "file": "cn_301100_2010-01-01_2025-12-31.csv",
+      "rows": 980,
+      "years": 3.88,
+      "annual_return": -0.202538,
+      "annual_vol": 0.465152,
+      "max_drawdown": 0.772425,
+      "autocorr1": -0.0262,
+      "vr5": 0.862,
+      "vr20": 0.697,
       "structure": "无明显结构",
       "allowed_directions": []
     }

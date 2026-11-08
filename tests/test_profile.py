@@ -103,5 +103,41 @@ class TestStatistics(unittest.TestCase):
         self.assertTrue(-1 <= r["autocorr1"] <= 1)
 
 
+class TestNoFalseStructure(unittest.TestCase):
+    """回归测试：随机游走绝不能判出结构。
+
+    这条是血的教训：第一版用固定阈值（VR>1.1 算趋势），而实测 iid 数据在 n=1500 时
+    VR20 的抽样标准差约 0.14 —— 阈值完全落在噪声里，随机游走被误判成「趋势型」。
+    现在改成置换检验 z 值（|z|>2）+ 自相关同向，两个都过才算有结构。
+    """
+
+    def test_random_walk_is_not_trend(self):
+        rng = random.Random(99)
+        prices, p = [], 100.0
+        for _ in range(1500):
+            p *= (1 + rng.gauss(0, 0.012))
+            prices.append(p)
+        r = P.profile(rows_from(prices))
+        self.assertTrue(r["ok"])
+        self.assertEqual(r["structure"], "无明显结构",
+                         f"随机游走被误判为 {r['structure']}，z={r.get('vr20_z')}")
+
+    def test_ten_random_seeds_never_called_trend(self):
+        """连跑 10 个随机种子，不能有一例被判成有结构。"""
+        for seed in range(10):
+            rng = random.Random(seed)
+            prices, p = [], 100.0
+            for _ in range(800):
+                p *= (1 + rng.gauss(0, 0.01))
+                prices.append(p)
+            r = P.profile(rows_from(prices))
+            self.assertEqual(r["structure"], "无明显结构",
+                             f"seed={seed} 被误判为 {r['structure']}")
+
+    def test_z_score_reported(self):
+        r = P.profile(rows_from(trend_prices()))
+        self.assertIsNotNone(r["vr20_z"])
+        self.assertGreater(abs(r["vr20_z"]), 2)
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

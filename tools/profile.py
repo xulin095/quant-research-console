@@ -77,6 +77,34 @@ def variance_ratio(rets, q=5):
     return varq / (q * var1)
 
 
+def vr_permutation(rets, q=20, boot=120, seed=7):
+    """用置换检验给方差比一个 z 值。
+
+    为什么必须这样：固定阈值（比如 VR>1.1 算趋势）是错的。
+    实测 iid 数据在 n=1500 时 VR20 的标准差约 0.14 —— 也就是说 1.10 只在 0.7σ 处，
+    属于纯噪声。用置换（打乱收益顺序）得到该数据自己的零分布，才是诚实的做法。
+    """
+    obs = variance_ratio(rets, q)
+    if obs is None:
+        return None, None
+    import random
+    rng = random.Random(seed)
+    r = list(rets)
+    null = []
+    for _ in range(boot):
+        rng.shuffle(r)
+        v = variance_ratio(r, q)
+        if v is not None:
+            null.append(v)
+    if len(null) < 20:
+        return obs, None
+    m = _mean(null)
+    sd = math.sqrt(_var(null))
+    if sd < 1e-9:
+        return obs, None
+    return obs, (obs - m) / sd
+
+
 def profile(rows):
     """输入标准表行，返回描述统计 + 一句「往哪个方向提假设」的提示。"""
     if len(rows) < MIN_ROWS:
@@ -132,38 +160,44 @@ def profile(rows):
     big = sum(1 for r in rets if abs(r) > 2 * sd) / n if sd > 0 else 0.0
     worst = min(rets) if rets else 0.0
 
-    # ---- 结构判定：只看方向，不给建议
-    trend_score, revert_score, why = 0, 0, []
-    if ac1 is not None:
-        if ac1 > 0.03:
-            trend_score += 1
-            why.append(f"lag1 自相关 +{ac1:.3f}（涨跌有延续）")
-        elif ac1 < -0.03:
-            revert_score += 1
-            why.append(f"lag1 自相关 {ac1:.3f}（涨跌有回吐）")
-        else:
-            why.append(f"lag1 自相关 {ac1:+.3f}（近乎无记忆）")
-    for label, vr in (("VR5", vr5), ("VR20", vr20)):
-        if vr is None:
-            continue
-        if vr > 1.10:
-            trend_score += 1
-            why.append(f"{label} {vr:.2f}（趋势放大）")
-        elif vr < 0.90:
-            revert_score += 1
-            why.append(f"{label} {vr:.2f}（波动被吃掉）")
+    # ---- 结构判定：z 值（置换检验）+ 自相关同向，两个都要过
+    vr20_obs, vr20_z = vr_permutation(rets, 20)
+    vr20 = round(vr20_obs, 3) if vr20_obs is not None else None
+    vr20_z = round(vr20_z, 2) if vr20_z is not None else None
+    ac_se = 1 / math.sqrt(n) if n > 0 else None   # 自相关的粗略标准误
+    ac_thr = 2 * ac_se if ac_se else None
 
-    if trend_score >= 2 and trend_score > revert_score:
+    why = []
+    if ac1 is not None:
+        rel = "显著" if (ac_thr and abs(ac1) > ac_thr) else "不显著"
+        why.append(f"lag1 自相关 {ac1:+.3f}（约 2σ 阈值 {ac_thr:.3f}，{rel}）")
+    if vr20_z is not None:
+        why.append(f"VR20 {vr20}，置换 z = {vr20_z:+.2f}（|z|>2 才算有结构）")
+    else:
+        why.append(f"VR20 {vr20}（样本不足，无法给 z 值）")
+
+    ac_sig_up = ac_thr is not None and ac1 is not None and ac1 > ac_thr
+    ac_sig_dn = ac_thr is not None and ac1 is not None and ac1 < -ac_thr
+    vr_sig_up = vr20_z is not None and vr20_z > 2
+    vr_sig_dn = vr20_z is not None and vr20_z < -2
+
+    if vr_sig_up and ac_sig_up:
         struct = "趋势型"
         hint = "历史上更像趋势延续。可考虑「时序趋势」或「截面动量」方向的假设。"
         allowed_dirs = ["momentum"]
-    elif revert_score >= 2 and revert_score > trend_score:
+    elif vr_sig_dn and ac_sig_dn:
         struct = "均值回归型"
         hint = "历史上更像涨跌回吐。可考虑「截面反转」或「短期反转」方向的假设。"
         allowed_dirs = ["reversal"]
+    elif vr20_z is not None and abs(vr20_z) > 2:
+        struct = "无明显结构"
+        hint = ("方差比有偏离，但自相关不同向 —— 证据不一致，不构成方向提示。"
+                "硬套方向是本项目最容易犯的错。")
+        allowed_dirs = []
     else:
         struct = "无明显结构"
-        hint = "两种方向都不占优 —— 与其硬套，不如换一只票或换一类信号再想。"
+        hint = ("两种方向都不占优（方差比与噪声不可区分）—— 与其硬套，"
+                "不如换一只票或换一类信号再想。")
         allowed_dirs = []
 
     def clean(x, nd=6):
@@ -196,6 +230,7 @@ def profile(rows):
         "max_drawdown": mdd, "max_dd_days": mdd_days,
         "worst_day": worst, "tail_ratio": big,
         "autocorr1": ac1, "autocorr5": ac5, "vr5": vr5, "vr20": vr20,
+        "vr20_z": vr20_z, "ac_threshold": clean(ac_thr),
         "bad_prices": bad_prices,
         "structure": struct, "hint": hint, "allowed_directions": allowed_dirs,
         "evidence": why,
