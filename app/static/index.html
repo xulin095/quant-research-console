@@ -1173,6 +1173,20 @@ el('btnSave').onclick=saveCard;
 /* ==================== 术语白话库 ==================== */
 var GL = {list: [], map: {}, re: null, loaded: false};
 
+function gv(e, f){
+  if (LANG === 'en' && e[f + '_en']) return e[f + '_en'];
+  return e[f] || '';
+}
+function gTerm(e){ return LANG === 'en' && e.term_en ? e.term_en : e.term; }
+function gAlt(e){
+  if (LANG !== 'en' || !e.term_en) return '';
+  return '<div style="font-size:11.5px;color:var(--dim2);margin:-4px 0 6px">' + esc(e.term) + '</div>';
+}
+function gLabel(f){
+  if (LANG === 'en') return f === 'analogy' ? 'Think of it like this: ' : 'In this project: ';
+  return f === 'analogy' ? '打个比方：' : '在这个项目里：';
+}
+
 function buildGlossIndex(list){
   GL.list = list; GL.map = {};
   list.forEach(function(e){ GL.map[e.term] = e; });
@@ -1200,8 +1214,8 @@ function showTip(term, x, y){
   var e = GL.map[term];
   if (!e) return;
   var t = el('tip');
-  t.innerHTML = '<h4>' + esc(e.term) + '</h4><p>' + esc(e.plain) + '</p>' +
-    (e.analogy ? '<div class="ana">打个比方：' + esc(e.analogy) + '</div>' : '');
+  t.innerHTML = '<h4>' + esc(gTerm(e)) + '</h4>' + gAlt(e) + '<p>' + esc(gv(e,'plain')) + '</p>' +
+    (gv(e,'analogy') ? '<div class="ana">' + gLabel('analogy') + esc(gv(e,'analogy')) + '</div>' : '');
   t.style.display = 'block';
   var w = t.offsetWidth, h = t.offsetHeight;
   var left = Math.min(x + 14, window.innerWidth - w - 16);
@@ -1220,14 +1234,14 @@ function renderGlossary(q){
   q = (q || '').trim().toLowerCase();
   var list = GL.list.filter(function(e){
     if (!q) return true;
-    var hay = (e.term + ' ' + e.plain + ' ' + (e.analogy || '') + ' ' + (e.why || '')).toLowerCase();
+    var hay = (e.term + ' ' + (e.term_en||'') + ' ' + e.plain + ' ' + (e.plain_en||'') + ' ' + (e.analogy||'') + ' ' + (e.analogy_en||'') + ' ' + (e.why||'') + ' ' + (e.why_en||'')).toLowerCase();
     return hay.indexOf(q) >= 0;
   });
   el('g-count').textContent = '共 ' + list.length + ' 条';
   el('g-list').innerHTML = list.map(function(e){
-    return '<div class="termcard"><h4>' + esc(e.term) + '</h4><p>' + esc(e.plain) + '</p>' +
-      (e.analogy ? '<div class="ana">打个比方：' + esc(e.analogy) + '</div>' : '') +
-      (e.why ? '<div class="why">在这个项目里：' + esc(e.why) + '</div>' : '') + '</div>';
+    return '<div class="termcard"><h4>' + esc(gTerm(e)) + '</h4>' + gAlt(e) + '<p>' + esc(gv(e,'plain')) + '</p>' +
+      (gv(e,'analogy') ? '<div class="ana">' + gLabel('analogy') + esc(gv(e,'analogy')) + '</div>' : '') +
+      (gv(e,'why') ? '<div class="why">' + gLabel('why') + esc(gv(e,'why')) + '</div>' : '') + '</div>';
   }).join('') || '<span class="hint">没找到，换个说法试试。</span>';
 }
 

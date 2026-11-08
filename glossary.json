@@ -1,62 +1,520 @@
 {
   "version": 1,
-  "note": "术语库：给每个高频词一句白话 + 一个类比 + 它在这个项目里出现在哪。",
+  "note": "术语库：每条含中文与英文字段；前端按当前语言取用（xxx_en 缺省时退回中文）。",
   "entries": [
-    {"term": "收益率", "plain": "期末比期初多了多少，按本金算。投入 1 万变成 1.05 万，收益率就是 5%。", "analogy": "跟存银行算利息一回事，只是涨跌都可能。", "why": "所有绩效数字的起点。"},
-    {"term": "年化收益率", "plain": "把不同长度的收益折算成『一年多少』，方便横向比较。三年涨了 50%，年化约 14.5%，不是 16.7%，因为要算复利。", "analogy": "把『跑完 42 公里用了几小时』换算成配速。", "why": "报告第 3 章每一行都用它。"},
-    {"term": "最大回撤", "plain": "从最高点跌到最低点，最惨的时候亏了多少。账户从 10 万涨到 12 万、又跌到 9 万，最大回撤就是 25%（12 万到 9 万）。", "analogy": "不是问你现在赚多少，而是问你最难受的时候能不能扛住不割肉。", "why": "决定策略能不能真的拿在手上。"},
-    {"term": "夏普比率", "plain": "每承担一份波动，换来多少收益。同样赚 10%，波动小的那个夏普更高。大于 1 算不错，小于 0 意味着还不如放着不动。", "analogy": "两条山路都到山顶，一条是缓坡，一条是悬崖边 —— 夏普量的是『这段路有多吓人』。", "why": "报告里衡量『值不值这个心惊肉跳』。"},
-    {"term": "胜率", "plain": "赚钱的交易占多少比例。但胜率高不等于赚钱：10 笔里 9 笔赚 10 块、1 笔亏 500 块，胜率 90% 照样亏。", "analogy": "投篮命中率高，但如果命中的都是 1 分球、投丢的是关键球，还是输。", "why": "报告第 3 章有它，但要和收益额一起看。"},
-    {"term": "基准", "plain": "用来对照的『什么都不做』版本：同一天买入同一只票，然后一直不动。", "analogy": "减肥的对照组：不节食不运动，就看自然变化。", "why": "所有策略都必须跟它比，否则牛市里谁都是天才。"},
-    {"term": "买入持有", "plain": "见『基准』。策略要证明的不是『赚了钱』，而是『比躺着不动多赚了』。", "why": "本项目判定路径成败的唯一参照物。"},
-    {"term": "超额收益", "plain": "策略的收益减去基准的收益。这部分才算『本事』，剩下的是跟着大盘涨的运气。", "analogy": "考试分数减掉班级平均分，才知道你是不是真的比大家强。", "why": "判定通过与否，只看超额，不看绝对收益。"},
-    {"term": "波动率", "plain": "价格晃得有多厉害，通常按一年折算。20% 表示大多数时候一年内上下晃两成。", "analogy": "坐在车里的颠簸程度。", "why": "决定你晚上睡不睡得着。"},
-    {"term": "手续费", "plain": "每次买卖都要付给券商的钱，按成交金额比例收。本项目按每边 0.03% 算。", "why": "交易越频繁，它吃掉的收益越多。"},
-    {"term": "滑点", "plain": "你想要的价格和你实际成交的价格之间的差。你想要 10.00，成交在 10.02，滑点就是 0.02。", "analogy": "外卖标价 30，加上配送费到手 32 —— 那 2 块就是滑点。", "why": "本项目按每边 0.05% 算，双边加起来 0.16%。"},
-    {"term": "印花税", "plain": "A 股卖出时国家收的税，目前 0.05%。买入不收，只收卖出。", "why": "本项目的 v1 没有计入，报告里会写明，所以 A 股的实际收益会再低一点。"},
-    {"term": "复权", "plain": "公司分红送股时，股价会出现一个『断口』（比如 10 送 10，价格直接腰斩）。复权就是把这个断口抹平，让历史价格可以连续比较。", "analogy": "把不同货币的价格先换成同一种货币，才能比较。", "why": "不复权的话，均线会在除权日突然跳空，产生一堆假信号。"},
-    {"term": "前复权", "plain": "保持现在的价格不变，把历史价格往低处调。看盘最顺，但每次分红都会重算历史价格。", "why": "本项目早期用过，后来发现拉长到 10 年会算出负价格。"},
-    {"term": "后复权", "plain": "保持历史价格不变，把现在的价格放大。适合算长期真实收益。", "why": "本项目现在长历史一律用它 —— 前复权在长历史高分红股上会算出负数。"},
-    {"term": "幸存者偏差", "plain": "只看活到今天的样本。用『今天还在的大公司』去回测过去，等于提前知道谁赢了。", "analogy": "研究『怎么活到 90 岁』时只采访活着的老人，会漏掉所有早逝的。", "why": "本项目最容易造出假优势的陷阱：12 只名票上动量有效，扩到 59 只含跑输票后立刻消失。"},
-    {"term": "point-in-time", "plain": "只用当时真的能看到的信息。今天的成分股名单不能拿来筛 2010 年的股票。", "why": "衡量数据诚实度的标准。"},
-    {"term": "训练段", "plain": "用来挑选参数的那一段历史。它和『样本外』是分开的两块：挑选只能用训练段，成绩只能在样本外算。", "why": "挑参数只能用这段，碰另一段就作弊。"},
-    {"term": "样本外", "plain": "没有参与挑选的那一段数据。只有在它上面还能赚钱，才算有点东西。", "analogy": "平时做题（训练段）不算本事，期末闭卷考（样本外）才算。", "why": "本项目所有判定的核心。"},
-    {"term": "留出段", "plain": "见『样本外』。本项目固定留出 2021 年之后的数据，只在最后看一眼，不许反复调参。", "why": "改它等于销毁考卷。"},
-    {"term": "walk-forward", "plain": "滚动地做同一件事：用前面几年挑参数，用紧接着的那段检验，然后整体往前挪。这样能得到很多段互不重叠的成绩。", "analogy": "一边往后翻日历一边做预测，不许回头看答案。", "why": "时序验证器 tools/validate.py 的核心方法。"},
-    {"term": "过拟合", "plain": "把噪声当成了规律。回测里某个参数特别亮，可能只是那段时间的巧合。", "analogy": "看云看出人脸 —— 形状对上了，但云并不想长得像人。", "why": "本项目判定『不通过』最常见的原因。"},
-    {"term": "p-hacking", "plain": "反复试不同的参数/方向，直到有一次好看，然后只报告那次。试得越多，越容易撞上好运。", "analogy": "买 100 张彩票，中了就发朋友圈说『我有选号天赋』。", "why": "本项目用『预注册卡 + 账本』来防它。"},
-    {"term": "预注册", "plain": "在做之前，把假设、参数、判定标准全部写下来并冻结。之后不许改。", "why": "cards/ 目录下的每张卡就是一份预注册。"},
-    {"term": "置信区间", "plain": "这个数字最可能落在哪个范围。区间是 [-3%, +12%]，说明结果可能就是 -3%，也可能是 12%。", "analogy": "天气预报说『明天降雨概率 60-80%』，比一个孤零零的『70%』诚实。", "why": "本项目的判定看区间下界：只有下界 > 0 才算有优势。"},
-    {"term": "t 值", "plain": "这个结果离『纯属碰巧』有多远。t 越大越不可能是巧合。常见门槛是 2 —— 大约相当于 5% 的概率是碰巧。", "analogy": "离平均分有几个标准差。", "why": "报告和判定里反复出现。"},
-    {"term": "p 值", "plain": "如果真相是『完全没效果』，那看到这么好结果的概率是多少。p 越小越不像巧合。", "analogy": "如果硬币是公平的，连续扔出 10 个正面有多难。", "why": "和 t 值一体两面。"},
-    {"term": "显著性", "plain": "这个结果是不是不太可能纯属碰巧。通常 p < 0.05 叫『显著』。", "why": "项目里所有的『通过』都要求显著。"},
-    {"term": "多重检验", "plain": "试的次数一多，总有一次会碰巧好看。所以要按试过的次数提高门槛。", "analogy": "一百个人各猜一次股票，总有一个猜对，这不代表他会选股。", "why": "本项目试 12 个回看期，就要按 12 次来折算门槛。"},
-    {"term": "Bonferroni", "plain": "多重检验最保守的校正方法：试了 N 次，就把门槛除以 N（等价地把 p 值乘 N）。", "why": "cs_audit 用它折算『最亮的那个格子里有多少是搜索出来的』。"},
-    {"term": "deflated Sharpe", "plain": "把『你一共试了多少次』算进去之后的夏普比率。试得越多，同样的成绩就越不稀奇。", "why": "时序验证器用它防止『试了 20 组参数挑最好』。"},
-    {"term": "置换检验", "plain": "把数据的顺序打乱、重算一次，重复几百次，看真实值在这个『纯运气分布』里有多罕见。", "analogy": "把同一副牌洗几百次，看看你刚拿到的那手牌有多难得。", "why": "结构画像用它给方差比算 z 值 —— 固定阈值会把随机游走误判成趋势。"},
-    {"term": "z 值", "plain": "观察值离『纯运气平均』有几个标准差。超过 2 才算不像运气。", "why": "结构画像里 |z| > 2 才判有结构。"},
-    {"term": "自相关", "plain": "今天的涨跌跟昨天还有没有关系。正数表示有惯性（顺着走），负数表示会回吐（来回摆），接近 0 表示没记忆。", "analogy": "昨天的天气对今天有没有参考价值。", "why": "结构画像的第一项指标。"},
-    {"term": "方差比", "plain": "把 20 天的波动和 1 天的波动比一比。大于 1 说明波动会越滚越大（趋势），小于 1 说明波动会被吃掉（回归）。", "why": "结构画像的 VR20。注意它本身噪声很大，必须看 z 值。"},
-    {"term": "动量", "plain": "涨的继续涨、跌的继续跌。买过去涨得好的票。", "why": "截面策略的一种方向。"},
-    {"term": "均值回归", "plain": "涨多了会跌回来、跌多了会涨回去。跟动量正好相反。", "why": "A 股数据里更常见的方向。"},
-    {"term": "反转", "plain": "见『均值回归』。本项目里 direction=reversal 就是买过去跌得最狠的。", "why": "HK-001 试的就是这个方向。"},
-    {"term": "截面", "plain": "同一时点上，横向比较一堆票谁强谁弱 —— 而不是盯着单只票猜它明天涨不涨。", "analogy": "不是预测某个学生下次考多少，而是给全班排名。", "why": "截面检验器的工作方式，样本量比单标的时序大一个数量级。"},
-    {"term": "rank IC", "plain": "你的排名和下一期实际涨跌的排名，有多一致。1 是完全一致，0 是毫无关系。-1 是完全相反。0.05 左右就已经有点用了。", "analogy": "你给全班排的名次，和下个月考试名次的相关度。", "why": "判定截面策略有没有预测力的核心指标。"},
-    {"term": "容量", "plain": "这个策略最多能装多少钱。资金一大，买卖本身就会把价格推走。", "why": "小资金的优势区就在这里 —— 大基金进不去的小票，你能进。"},
-    {"term": "回测", "plain": "拿历史数据把一套规则重放一遍，看它当时会赚还是会亏。它只能说明『过去会怎样』，不能说明『以后会怎样』。", "analogy": "用去年的考题模拟考一次 —— 分数有参考价值，但题目会换。", "why": "本项目所有结论都来自回测，所以我们反复强调『样本外』。"},
-    {"term": "夏普", "plain": "见『夏普比率』。常被简写成夏普，指的是同一个东西：每承担一份波动，换来多少收益。", "why": "报告里大量出现简写。"},
-    {"term": "均线", "plain": "把最近 N 天的收盘价取平均，连成一条线。它的作用是抹平日常噪音，让趋势更容易看出来。", "analogy": "把每天的体重记下来取周平均，比看单日数字更容易看出增减趋势。", "why": "本项目的双均线策略用 MA5 和 MA20。"},
-    {"term": "金叉", "plain": "短均线从下往上穿过长均线，常被当成『开始走强』的信号。", "analogy": "短期情绪开始超过长期平均。", "why": "双均线策略的买入信号。"},
-    {"term": "死叉", "plain": "短均线从上往下穿过长均线，常被当成『开始走弱』的信号。", "why": "双均线策略的卖出信号。"},
-    {"term": "涨停", "plain": "A 股单日涨幅达到上限（主板 10%、创业板/科创板 20%），到了上限就买不进。", "analogy": "演唱会门票一秒售空 —— 你想买也买不到。", "why": "回测若假设『想买就买得到』，会系统性高估收益。"},
-    {"term": "跌停", "plain": "A 股单日跌幅达到下限，到了下限就卖不出。", "why": "急着止损却卖不掉，是 A 股回测最容易忽略的现实。"},
-    {"term": "停牌", "plain": "股票临时停止交易，这段时间没有成交，行情软件里也常常没有当天的行。", "why": "数据里缺了这些天，指标窗口会错位。"},
-    {"term": "T+1", "plain": "A 股当天买入的股票，当天不能卖出，最快第二天才能卖。", "analogy": "今天借的书，明天才能还。", "why": "所以本项目的成交假设是『信号次日开盘成交』，正好符合 T+1。"},
-    {"term": "做空", "plain": "先借股票卖出、等跌了再买回来还。方向反着赚钱。", "why": "本项目只做多，不做空 —— 做空的成本和风险对新手不友好。"},
-    {"term": "分红", "plain": "公司把利润分一部分给股东，通常以现金形式。分红当天股价会相应下调。", "why": "这正是需要『复权』的原因。"},
-    {"term": "拆股", "plain": "把一股拆成几股（比如 1 拆 4），股价相应变成四分之一。总市值不变。", "analogy": "把一张 100 元换成 4 张 25 元，钱没变。", "why": "不处理拆股，价格序列会出现‘腰斩’式的假跳空。"},
-    {"term": "仓位", "plain": "你有多大比例的钱押在这笔交易上。全仓就是 100%，半仓就是 50%。", "why": "决策层就是决定『下多少仓位』的模块。"},
-    {"term": "样本内", "plain": "见『训练段』。参与过挑选的那部分数据，在它上面取得的成绩必然偏好看。", "why": "报告里说『样本内/样本外』分开报，就是防止拿训练成绩当真相。"},
-    {"term": "年化波动", "plain": "见『波动率』。把日波动按一年折算，方便和收益率放在一起比较。", "why": "结构画像里每只票都会算。"},    {"term": "ATDV", "plain": "平均每天成交额。用来估算你的下单量会不会把价格砸动。", "why": "真实成本模型要考虑它，v1 还没做。"}
+    {
+      "term": "收益率",
+      "plain": "期末比期初多了多少，按本金算。投入 1 万变成 1.05 万，收益率就是 5%。",
+      "analogy": "跟存银行算利息一回事，只是涨跌都可能。",
+      "why": "所有绩效数字的起点。",
+      "term_en": "Return",
+      "plain_en": "How much more you ended up with, as a share of what you put in. 10,000 becoming 10,500 is a 5% return.",
+      "analogy_en": "Same idea as interest on a bank deposit, except the number can go down.",
+      "why_en": "The starting point for every performance figure."
+    },
+    {
+      "term": "年化收益率",
+      "plain": "把不同长度的收益折算成『一年多少』，方便横向比较。三年涨了 50%，年化约 14.5%，不是 16.7%，因为要算复利。",
+      "analogy": "把『跑完 42 公里用了几小时』换算成配速。",
+      "why": "报告第 3 章每一行都用它。",
+      "term_en": "Annualised return (CAGR)",
+      "plain_en": "Compresses any period into 'per year' so different lengths can be compared. Three years of +50% total is about 14.5% a year, not 16.7%, because of compounding.",
+      "analogy_en": "Turning 'finished the marathon in 4 hours' into a pace per kilometre.",
+      "why_en": "Every row of the results table uses it."
+    },
+    {
+      "term": "最大回撤",
+      "plain": "从最高点跌到最低点，最惨的时候亏了多少。账户从 10 万涨到 12 万、又跌到 9 万，最大回撤就是 25%（12 万到 9 万）。",
+      "analogy": "不是问你现在赚多少，而是问你最难受的时候能不能扛住不割肉。",
+      "why": "决定策略能不能真的拿在手上。",
+      "term_en": "Maximum drawdown",
+      "plain_en": "The worst peak-to-trough loss. An account going 100k to 120k then 90k has a maximum drawdown of 25% (120k down to 90k).",
+      "analogy_en": "It does not ask what you made; it asks what you would have had to sit through without selling.",
+      "why_en": "Decides whether a strategy is actually holdable."
+    },
+    {
+      "term": "夏普比率",
+      "plain": "每承担一份波动，换来多少收益。同样赚 10%，波动小的那个夏普更高。大于 1 算不错，小于 0 意味着还不如放着不动。",
+      "analogy": "两条山路都到山顶，一条是缓坡，一条是悬崖边 —— 夏普量的是『这段路有多吓人』。",
+      "why": "报告里衡量『值不值这个心惊肉跳』。",
+      "term_en": "Sharpe ratio",
+      "plain_en": "Return per unit of wobble. Of two strategies making 10%, the steadier one has the higher Sharpe. Above 1 is decent; below 0 means you would have done better doing nothing.",
+      "analogy_en": "Two mountain paths to the same summit: one gentle, one along a cliff. Sharpe measures how scary the walk was.",
+      "why_en": "How the results table measures 'was this worth the stress'."
+    },
+    {
+      "term": "胜率",
+      "plain": "赚钱的交易占多少比例。但胜率高不等于赚钱：10 笔里 9 笔赚 10 块、1 笔亏 500 块，胜率 90% 照样亏。",
+      "analogy": "投篮命中率高，但如果命中的都是 1 分球、投丢的是关键球，还是输。",
+      "why": "报告第 3 章有它，但要和收益额一起看。",
+      "term_en": "Hit rate",
+      "plain_en": "The share of trades that made money. A high hit rate is not profit: nine win 10 and one loses 500 is a 90% hit rate and a loss.",
+      "analogy_en": "A great free-throw percentage does not win games if the misses are the important shots.",
+      "why_en": "Shown in the results, but always next to the size of wins and losses."
+    },
+    {
+      "term": "基准",
+      "plain": "用来对照的『什么都不做』版本：同一天买入同一只票，然后一直不动。",
+      "analogy": "减肥的对照组：不节食不运动，就看自然变化。",
+      "why": "所有策略都必须跟它比，否则牛市里谁都是天才。",
+      "term_en": "Benchmark",
+      "plain_en": "The 'do nothing' comparison: buy the same thing on the same day and never touch it.",
+      "analogy_en": "The control group in a diet study.",
+      "why_en": "Every strategy must be measured against it, otherwise any bull market makes you look like a genius."
+    },
+    {
+      "term": "买入持有",
+      "plain": "见『基准』。策略要证明的不是『赚了钱』，而是『比躺着不动多赚了』。",
+      "why": "本项目判定路径成败的唯一参照物。",
+      "term_en": "Buy and hold",
+      "plain_en": "See benchmark. The claim being tested is not 'it made money' but 'it made more than sitting still'.",
+      "why_en": "The only reference point this project judges anything against."
+    },
+    {
+      "term": "超额收益",
+      "plain": "策略的收益减去基准的收益。这部分才算『本事』，剩下的是跟着大盘涨的运气。",
+      "analogy": "考试分数减掉班级平均分，才知道你是不是真的比大家强。",
+      "why": "判定通过与否，只看超额，不看绝对收益。",
+      "term_en": "Excess return",
+      "plain_en": "Strategy return minus benchmark return. Only this part is skill; the rest is market beta you got for free.",
+      "analogy_en": "Your exam score minus the class average.",
+      "why_en": "Pass or fail is decided on excess return only, never on absolute return."
+    },
+    {
+      "term": "波动率",
+      "plain": "价格晃得有多厉害，通常按一年折算。20% 表示大多数时候一年内上下晃两成。",
+      "analogy": "坐在车里的颠簸程度。",
+      "why": "决定你晚上睡不睡得着。",
+      "term_en": "Volatility",
+      "plain_en": "How violently the price moves, usually annualised. 20% means it typically swings about a fifth within a year.",
+      "analogy_en": "How bumpy the ride is.",
+      "why_en": "Decides whether you can sleep while holding it."
+    },
+    {
+      "term": "手续费",
+      "plain": "每次买卖都要付给券商的钱，按成交金额比例收。本项目按每边 0.03% 算。",
+      "why": "交易越频繁，它吃掉的收益越多。",
+      "term_en": "Commission",
+      "plain_en": "Paid to the broker on every trade, as a percentage of the amount traded. This project assumes 0.03% per side.",
+      "why_en": "The more you trade, the more of the return it eats."
+    },
+    {
+      "term": "滑点",
+      "plain": "你想要的价格和你实际成交的价格之间的差。你想要 10.00，成交在 10.02，滑点就是 0.02。",
+      "analogy": "外卖标价 30，加上配送费到手 32 —— 那 2 块就是滑点。",
+      "why": "本项目按每边 0.05% 算，双边加起来 0.16%。",
+      "term_en": "Slippage",
+      "plain_en": "The gap between the price you wanted and the price you got. Wanted 10.00, filled at 10.02: 0.02 of slippage.",
+      "analogy_en": "Listed price 30, checkout 32 after fees: those 2 are slippage.",
+      "why_en": "Assumed at 0.05% per side here, giving 0.16% round trip with commission."
+    },
+    {
+      "term": "印花税",
+      "plain": "A 股卖出时国家收的税，目前 0.05%。买入不收，只收卖出。",
+      "why": "本项目的 v1 没有计入，报告里会写明，所以 A 股的实际收益会再低一点。",
+      "term_en": "Stamp duty",
+      "plain_en": "A tax on selling A-shares (0.05%). Buying has none.",
+      "why_en": "v1 of this project does not include it, so real A-share returns are slightly worse than reported."
+    },
+    {
+      "term": "复权",
+      "plain": "公司分红送股时，股价会出现一个『断口』（比如 10 送 10，价格直接腰斩）。复权就是把这个断口抹平，让历史价格可以连续比较。",
+      "analogy": "把不同货币的价格先换成同一种货币，才能比较。",
+      "why": "不复权的话，均线会在除权日突然跳空，产生一堆假信号。",
+      "term_en": "Price adjustment",
+      "plain_en": "When a company pays a dividend or splits, the price series gets a step change (10-for-10 halves the price). Adjustment removes that step so history is comparable.",
+      "analogy_en": "Converting prices into one currency before comparing them.",
+      "why_en": "Without it, a moving average sees a fake gap on the ex-date and fires a false signal."
+    },
+    {
+      "term": "前复权",
+      "plain": "保持现在的价格不变，把历史价格往低处调。看盘最顺，但每次分红都会重算历史价格。",
+      "why": "本项目早期用过，后来发现拉长到 10 年会算出负价格。",
+      "term_en": "Forward adjustment",
+      "plain_en": "Keeps today's price and scales history down. Looks right on a chart, but every new dividend rewrites the past.",
+      "why_en": "Used early in this project; over ten years on high-dividend names it produced negative prices."
+    },
+    {
+      "term": "后复权",
+      "plain": "保持历史价格不变，把现在的价格放大。适合算长期真实收益。",
+      "why": "本项目现在长历史一律用它 —— 前复权在长历史高分红股上会算出负数。",
+      "term_en": "Backward adjustment",
+      "plain_en": "Keeps history fixed and scales today's price up. The right choice for long-run return calculation.",
+      "why_en": "All long history here uses it, because forward adjustment went negative."
+    },
+    {
+      "term": "幸存者偏差",
+      "plain": "只看活到今天的样本。用『今天还在的大公司』去回测过去，等于提前知道谁赢了。",
+      "analogy": "研究『怎么活到 90 岁』时只采访活着的老人，会漏掉所有早逝的。",
+      "why": "本项目最容易造出假优势的陷阱：12 只名票上动量有效，扩到 59 只含跑输票后立刻消失。",
+      "term_en": "Survivorship bias",
+      "plain_en": "Only looking at what survived. Backtesting on 'companies still listed today' means you already know who won.",
+      "analogy_en": "Studying 'how to live to 90' by interviewing only people who are alive.",
+      "why_en": "The easiest way to invent a fake edge: momentum looked good on 12 famous names (IC +0.063) and vanished once 59 names including losers were used."
+    },
+    {
+      "term": "point-in-time",
+      "plain": "只用当时真的能看到的信息。今天的成分股名单不能拿来筛 2010 年的股票。",
+      "why": "衡量数据诚实度的标准。",
+      "term_en": "Point-in-time",
+      "plain_en": "Only information that was actually available at the time. Today's index membership cannot be used to screen stocks in 2010.",
+      "why_en": "The standard for data honesty."
+    },
+    {
+      "term": "训练段",
+      "plain": "用来挑选参数的那一段历史。它和『样本外』是分开的两块：挑选只能用训练段，成绩只能在样本外算。",
+      "why": "挑参数只能用这段，碰另一段就作弊。",
+      "term_en": "Training window",
+      "plain_en": "The part of history used to choose parameters. It is separate from the out-of-sample part: choose here, score there.",
+      "why_en": "Parameters may only be chosen on this slice. Touching the other slice is cheating."
+    },
+    {
+      "term": "样本外",
+      "plain": "没有参与挑选的那一段数据。只有在它上面还能赚钱，才算有点东西。",
+      "analogy": "平时做题（训练段）不算本事，期末闭卷考（样本外）才算。",
+      "why": "本项目所有判定的核心。",
+      "term_en": "Out-of-sample",
+      "plain_en": "Data that played no part in choosing the parameters. If it still works here, there may be something real.",
+      "analogy_en": "Practising at home proves nothing; the closed-book exam does.",
+      "why_en": "The core of every verdict in this project."
+    },
+    {
+      "term": "留出段",
+      "plain": "见『样本外』。本项目固定留出 2021 年之后的数据，只在最后看一眼，不许反复调参。",
+      "why": "改它等于销毁考卷。",
+      "term_en": "Holdout",
+      "plain_en": "See out-of-sample. Here: everything after 2021 is held back and looked at once, not repeatedly tuned against.",
+      "why_en": "Changing it is destroying the exam paper."
+    },
+    {
+      "term": "walk-forward",
+      "plain": "滚动地做同一件事：用前面几年挑参数，用紧接着的那段检验，然后整体往前挪。这样能得到很多段互不重叠的成绩。",
+      "analogy": "一边往后翻日历一边做预测，不许回头看答案。",
+      "why": "时序验证器 tools/validate.py 的核心方法。",
+      "term_en": "Walk-forward",
+      "plain_en": "Rolling the same procedure forward: pick parameters on the past, test on what comes next, then shift the window. Produces many non-overlapping scores.",
+      "analogy_en": "Turning calendar pages and predicting as you go, with no peeking ahead.",
+      "why_en": "The method at the heart of tools/validate.py."
+    },
+    {
+      "term": "过拟合",
+      "plain": "把噪声当成了规律。回测里某个参数特别亮，可能只是那段时间的巧合。",
+      "analogy": "看云看出人脸 —— 形状对上了，但云并不想长得像人。",
+      "why": "本项目判定『不通过』最常见的原因。",
+      "term_en": "Overfitting",
+      "plain_en": "Mistaking noise for a pattern. A parameter that looks brilliant in a backtest may just be a coincidence of that period.",
+      "analogy_en": "Seeing faces in clouds: the shape matches, but the cloud was not trying.",
+      "why_en": "The most common reason something is judged a failure here."
+    },
+    {
+      "term": "p-hacking",
+      "plain": "反复试不同的参数/方向，直到有一次好看，然后只报告那次。试得越多，越容易撞上好运。",
+      "analogy": "买 100 张彩票，中了就发朋友圈说『我有选号天赋』。",
+      "why": "本项目用『预注册卡 + 账本』来防它。",
+      "term_en": "p-hacking",
+      "plain_en": "Trying many parameters or directions until one looks good, then reporting only that one. The more tries, the better the best result looks.",
+      "analogy_en": "Buying 100 lottery tickets and posting the winner as evidence of talent.",
+      "why_en": "Countered here by pre-registered cards plus an append-only log."
+    },
+    {
+      "term": "预注册",
+      "plain": "在做之前，把假设、参数、判定标准全部写下来并冻结。之后不许改。",
+      "why": "cards/ 目录下的每张卡就是一份预注册。",
+      "term_en": "Pre-registration",
+      "plain_en": "Writing the hypothesis, parameters and pass criteria down before running anything, then freezing them.",
+      "why_en": "Every card in cards/ is one."
+    },
+    {
+      "term": "置信区间",
+      "plain": "这个数字最可能落在哪个范围。区间是 [-3%, +12%]，说明结果可能就是 -3%，也可能是 12%。",
+      "analogy": "天气预报说『明天降雨概率 60-80%』，比一个孤零零的『70%』诚实。",
+      "why": "本项目的判定看区间下界：只有下界 > 0 才算有优势。",
+      "term_en": "Confidence interval",
+      "plain_en": "The range the true value most likely sits in. An interval of -3% to +12% means the answer may well be -3%.",
+      "analogy_en": "A forecast of '60-80% chance of rain' is more honest than a bare '70%'.",
+      "why_en": "Verdicts read the lower bound: only above zero counts as an edge."
+    },
+    {
+      "term": "t 值",
+      "plain": "这个结果离『纯属碰巧』有多远。t 越大越不可能是巧合。常见门槛是 2 —— 大约相当于 5% 的概率是碰巧。",
+      "analogy": "离平均分有几个标准差。",
+      "why": "报告和判定里反复出现。",
+      "term_en": "t-statistic",
+      "plain_en": "How far the result sits from 'pure coincidence'. Bigger t, less likely luck. Two is the usual bar, roughly a 5% chance of coincidence.",
+      "analogy_en": "How many standard deviations away from the average you are.",
+      "why_en": "Appears throughout the reports and verdicts."
+    },
+    {
+      "term": "p 值",
+      "plain": "如果真相是『完全没效果』，那看到这么好结果的概率是多少。p 越小越不像巧合。",
+      "analogy": "如果硬币是公平的，连续扔出 10 个正面有多难。",
+      "why": "和 t 值一体两面。",
+      "term_en": "p-value",
+      "plain_en": "If the truth were 'no effect at all', the chance of seeing something this good. Smaller is less like luck.",
+      "analogy_en": "How unlikely ten heads in a row is with a fair coin.",
+      "why_en": "The other side of the same coin as t."
+    },
+    {
+      "term": "显著性",
+      "plain": "这个结果是不是不太可能纯属碰巧。通常 p < 0.05 叫『显著』。",
+      "why": "项目里所有的『通过』都要求显著。",
+      "term_en": "Statistical significance",
+      "plain_en": "Whether the result is unlikely to be pure coincidence. Conventionally p below 0.05 is called significant.",
+      "why_en": "Every pass in this project requires it."
+    },
+    {
+      "term": "多重检验",
+      "plain": "试的次数一多，总有一次会碰巧好看。所以要按试过的次数提高门槛。",
+      "analogy": "一百个人各猜一次股票，总有一个猜对，这不代表他会选股。",
+      "why": "本项目试 12 个回看期，就要按 12 次来折算门槛。",
+      "term_en": "Multiple testing",
+      "plain_en": "Try enough things and one will look good by accident, so the bar has to rise with the number of tries.",
+      "analogy_en": "A hundred people each guess a stock; one is right, which proves nothing.",
+      "why_en": "This project tries 12 lookbacks, so the bar is adjusted for 12."
+    },
+    {
+      "term": "Bonferroni",
+      "plain": "多重检验最保守的校正方法：试了 N 次，就把门槛除以 N（等价地把 p 值乘 N）。",
+      "why": "cs_audit 用它折算『最亮的那个格子里有多少是搜索出来的』。",
+      "term_en": "Bonferroni correction",
+      "plain_en": "The most conservative fix for multiple testing: with N tries, divide the threshold by N (equivalently multiply the p-value by N).",
+      "why_en": "cs_audit uses it to discount how much of the best cell is just searching."
+    },
+    {
+      "term": "deflated Sharpe",
+      "plain": "把『你一共试了多少次』算进去之后的夏普比率。试得越多，同样的成绩就越不稀奇。",
+      "why": "时序验证器用它防止『试了 20 组参数挑最好』。",
+      "term_en": "Deflated Sharpe",
+      "plain_en": "A Sharpe ratio that accounts for how many variants you tried. The more attempts, the less impressive the same number.",
+      "why_en": "The time-series validator uses it to defuse 'tried 20 parameter sets, kept the best'."
+    },
+    {
+      "term": "置换检验",
+      "plain": "把数据的顺序打乱、重算一次，重复几百次，看真实值在这个『纯运气分布』里有多罕见。",
+      "analogy": "把同一副牌洗几百次，看看你刚拿到的那手牌有多难得。",
+      "why": "结构画像用它给方差比算 z 值 —— 固定阈值会把随机游走误判成趋势。",
+      "term_en": "Permutation test",
+      "plain_en": "Shuffle the data, recompute, repeat hundreds of times, and see how rare the real value is in that distribution of pure luck.",
+      "analogy_en": "Shuffling the same deck hundreds of times to see how unusual the hand you drew really is.",
+      "why_en": "The structural profile uses it for a z-score: fixed thresholds misclassified random walks as trends."
+    },
+    {
+      "term": "z 值",
+      "plain": "观察值离『纯运气平均』有几个标准差。超过 2 才算不像运气。",
+      "why": "结构画像里 |z| > 2 才判有结构。",
+      "term_en": "z-score",
+      "plain_en": "How many standard deviations the observation sits from the 'pure luck' average. Beyond 2 starts to look unlike luck.",
+      "why_en": "The profile requires |z| above 2 before calling anything a structure."
+    },
+    {
+      "term": "自相关",
+      "plain": "今天的涨跌跟昨天还有没有关系。正数表示有惯性（顺着走），负数表示会回吐（来回摆），接近 0 表示没记忆。",
+      "analogy": "昨天的天气对今天有没有参考价值。",
+      "why": "结构画像的第一项指标。",
+      "term_en": "Autocorrelation",
+      "plain_en": "Whether today's move remembers yesterday's. Positive means momentum, negative means it gives back, near zero means no memory.",
+      "analogy_en": "Whether yesterday's weather tells you anything about today's.",
+      "why_en": "First metric in the structural profile."
+    },
+    {
+      "term": "方差比",
+      "plain": "把 20 天的波动和 1 天的波动比一比。大于 1 说明波动会越滚越大（趋势），小于 1 说明波动会被吃掉（回归）。",
+      "why": "结构画像的 VR20。注意它本身噪声很大，必须看 z 值。",
+      "term_en": "Variance ratio",
+      "plain_en": "20-day variance divided by one-day variance. Above 1 means swings compound (trending), below 1 means they get eaten (reverting).",
+      "why_en": "VR20 in the profile. Noisy on its own, which is why the z-score is what matters."
+    },
+    {
+      "term": "动量",
+      "plain": "涨的继续涨、跌的继续跌。买过去涨得好的票。",
+      "why": "截面策略的一种方向。",
+      "term_en": "Momentum",
+      "plain_en": "What went up keeps going up, what fell keeps falling. Buy past winners.",
+      "why_en": "One of the two directions a cross-section can test."
+    },
+    {
+      "term": "均值回归",
+      "plain": "涨多了会跌回来、跌多了会涨回去。跟动量正好相反。",
+      "why": "A 股数据里更常见的方向。",
+      "term_en": "Mean reversion",
+      "plain_en": "What ran up comes back, what fell bounces. The opposite of momentum.",
+      "why_en": "The more common direction in the A-share data here."
+    },
+    {
+      "term": "反转",
+      "plain": "见『均值回归』。本项目里 direction=reversal 就是买过去跌得最狠的。",
+      "why": "HK-001 试的就是这个方向。",
+      "term_en": "Reversal",
+      "plain_en": "See mean reversion. direction = reversal here means buying the worst past performers.",
+      "why_en": "The direction HK-001 tested."
+    },
+    {
+      "term": "截面",
+      "plain": "同一时点上，横向比较一堆票谁强谁弱 —— 而不是盯着单只票猜它明天涨不涨。",
+      "analogy": "不是预测某个学生下次考多少，而是给全班排名。",
+      "why": "截面检验器的工作方式，样本量比单标的时序大一个数量级。",
+      "term_en": "Cross-section",
+      "plain_en": "Comparing many tickers at the same moment, instead of guessing one ticker's next move.",
+      "analogy_en": "Rather than predicting one student's next score, rank the whole class.",
+      "why_en": "How the cross-sectional validator works: an order of magnitude more observations than one time series."
+    },
+    {
+      "term": "rank IC",
+      "plain": "你的排名和下一期实际涨跌的排名，有多一致。1 是完全一致，0 是毫无关系。-1 是完全相反。0.05 左右就已经有点用了。",
+      "analogy": "你给全班排的名次，和下个月考试名次的相关度。",
+      "why": "判定截面策略有没有预测力的核心指标。",
+      "term_en": "Rank IC",
+      "plain_en": "How well your ranking matches the next period's actual ranking. 1 is perfect, 0 unrelated, -1 perfectly inverted. Around 0.05 already has some use.",
+      "analogy_en": "How closely your class ranking matches the next exam's ranking.",
+      "why_en": "The core measure of whether a cross-sectional signal predicts anything."
+    },
+    {
+      "term": "容量",
+      "plain": "这个策略最多能装多少钱。资金一大，买卖本身就会把价格推走。",
+      "why": "小资金的优势区就在这里 —— 大基金进不去的小票，你能进。",
+      "term_en": "Capacity",
+      "plain_en": "The most money a strategy can absorb. Push more through and your own orders move the price.",
+      "why_en": "Where small capital has an advantage: names too small for large funds."
+    },
+    {
+      "term": "回测",
+      "plain": "拿历史数据把一套规则重放一遍，看它当时会赚还是会亏。它只能说明『过去会怎样』，不能说明『以后会怎样』。",
+      "analogy": "用去年的考题模拟考一次 —— 分数有参考价值，但题目会换。",
+      "why": "本项目所有结论都来自回测，所以我们反复强调『样本外』。",
+      "term_en": "Backtest",
+      "plain_en": "Replaying a rule on historical data to see what it would have done. It describes the past, not the future.",
+      "analogy_en": "A mock exam using last year's paper: useful, but the questions change.",
+      "why_en": "Every result here comes from one, which is why out-of-sample matters so much."
+    },
+    {
+      "term": "夏普",
+      "plain": "见『夏普比率』。常被简写成夏普，指的是同一个东西：每承担一份波动，换来多少收益。",
+      "why": "报告里大量出现简写。",
+      "term_en": "Sharpe",
+      "plain_en": "Short for Sharpe ratio: return per unit of wobble.",
+      "why_en": "Reports use the short form a lot."
+    },
+    {
+      "term": "均线",
+      "plain": "把最近 N 天的收盘价取平均，连成一条线。它的作用是抹平日常噪音，让趋势更容易看出来。",
+      "analogy": "把每天的体重记下来取周平均，比看单日数字更容易看出增减趋势。",
+      "why": "本项目的双均线策略用 MA5 和 MA20。",
+      "term_en": "Moving average",
+      "plain_en": "The average closing price over the last N days, drawn as a line. Its job is to smooth daily noise so the trend is visible.",
+      "analogy_en": "Weekly averages of daily weigh-ins show the trend that single days hide.",
+      "why_en": "The dual moving-average strategy uses MA5 and MA20."
+    },
+    {
+      "term": "金叉",
+      "plain": "短均线从下往上穿过长均线，常被当成『开始走强』的信号。",
+      "analogy": "短期情绪开始超过长期平均。",
+      "why": "双均线策略的买入信号。",
+      "term_en": "Golden cross",
+      "plain_en": "The short moving average crosses above the long one; often read as 'starting to strengthen'.",
+      "analogy_en": "Short-term sentiment overtaking the long-term average.",
+      "why_en": "The buy signal of the MA strategy."
+    },
+    {
+      "term": "死叉",
+      "plain": "短均线从上往下穿过长均线，常被当成『开始走弱』的信号。",
+      "why": "双均线策略的卖出信号。",
+      "term_en": "Death cross",
+      "plain_en": "The short moving average crosses below the long one; often read as 'starting to weaken'.",
+      "why_en": "The sell signal of the MA strategy."
+    },
+    {
+      "term": "涨停",
+      "plain": "A 股单日涨幅达到上限（主板 10%、创业板/科创板 20%），到了上限就买不进。",
+      "analogy": "演唱会门票一秒售空 —— 你想买也买不到。",
+      "why": "回测若假设『想买就买得到』，会系统性高估收益。",
+      "term_en": "Limit up",
+      "plain_en": "A-shares stop trading at a daily gain cap (10% main board, 20% ChiNext/STAR). At the cap you cannot buy.",
+      "analogy_en": "Concert tickets sold out in a second: you cannot get in.",
+      "why_en": "A backtest that assumes 'you can always buy' systematically overstates returns."
+    },
+    {
+      "term": "跌停",
+      "plain": "A 股单日跌幅达到下限，到了下限就卖不出。",
+      "why": "急着止损却卖不掉，是 A 股回测最容易忽略的现实。",
+      "term_en": "Limit down",
+      "plain_en": "The daily loss cap. At the cap you cannot sell.",
+      "why_en": "Wanting to stop out and being unable to is the reality A-share backtests ignore most often."
+    },
+    {
+      "term": "停牌",
+      "plain": "股票临时停止交易，这段时间没有成交，行情软件里也常常没有当天的行。",
+      "why": "数据里缺了这些天，指标窗口会错位。",
+      "term_en": "Trading halt",
+      "plain_en": "The stock stops trading; often there is no bar at all in the data.",
+      "why_en": "Missing days misalign every indicator window."
+    },
+    {
+      "term": "T+1",
+      "plain": "A 股当天买入的股票，当天不能卖出，最快第二天才能卖。",
+      "analogy": "今天借的书，明天才能还。",
+      "why": "所以本项目的成交假设是『信号次日开盘成交』，正好符合 T+1。",
+      "term_en": "T+1 settlement",
+      "plain_en": "Shares bought today cannot be sold until the next day.",
+      "analogy_en": "A library book borrowed today can be returned tomorrow.",
+      "why_en": "Why this project fills at next-day open, which matches T+1."
+    },
+    {
+      "term": "做空",
+      "plain": "先借股票卖出、等跌了再买回来还。方向反着赚钱。",
+      "why": "本项目只做多，不做空 —— 做空的成本和风险对新手不友好。",
+      "term_en": "Short selling",
+      "plain_en": "Borrow shares, sell them, buy back cheaper, return them. Profits when the price falls.",
+      "why_en": "This project is long-only: shorting costs and risks are not friendly to beginners."
+    },
+    {
+      "term": "分红",
+      "plain": "公司把利润分一部分给股东，通常以现金形式。分红当天股价会相应下调。",
+      "why": "这正是需要『复权』的原因。",
+      "term_en": "Dividend",
+      "plain_en": "A company paying part of its profit to shareholders, usually cash. The price drops by roughly the same amount on the ex-date.",
+      "why_en": "Exactly why price adjustment is needed."
+    },
+    {
+      "term": "拆股",
+      "plain": "把一股拆成几股（比如 1 拆 4），股价相应变成四分之一。总市值不变。",
+      "analogy": "把一张 100 元换成 4 张 25 元，钱没变。",
+      "why": "不处理拆股，价格序列会出现‘腰斩’式的假跳空。",
+      "term_en": "Stock split",
+      "plain_en": "One share becomes several (1-for-4), the price becomes a quarter. Total value unchanged.",
+      "analogy_en": "Changing a 100 note into four 25s: the money is the same.",
+      "why_en": "Unadjusted, a split looks like a fake 75% crash."
+    },
+    {
+      "term": "仓位",
+      "plain": "你有多大比例的钱押在这笔交易上。全仓就是 100%，半仓就是 50%。",
+      "why": "决策层就是决定『下多少仓位』的模块。",
+      "term_en": "Position size",
+      "plain_en": "How much of your capital is on this trade. Full position is 100%, half is 50%.",
+      "why_en": "The decision layer exists to choose position size."
+    },
+    {
+      "term": "样本内",
+      "plain": "见『训练段』。参与过挑选的那部分数据，在它上面取得的成绩必然偏好看。",
+      "why": "报告里说『样本内/样本外』分开报，就是防止拿训练成绩当真相。",
+      "term_en": "In-sample",
+      "plain_en": "See training window. The slice used for choosing, where results are flattering by construction.",
+      "why_en": "Reports separate in-sample from out-of-sample so training scores are not mistaken for truth."
+    },
+    {
+      "term": "年化波动",
+      "plain": "见『波动率』。把日波动按一年折算，方便和收益率放在一起比较。",
+      "why": "结构画像里每只票都会算。",
+      "term_en": "Annualised volatility",
+      "plain_en": "See volatility: daily moves scaled to a year so they sit next to returns.",
+      "why_en": "Computed for every ticker in the profile."
+    },
+    {
+      "term": "ATDV",
+      "plain": "平均每天成交额。用来估算你的下单量会不会把价格砸动。",
+      "why": "真实成本模型要考虑它，v1 还没做。",
+      "term_en": "ATDV",
+      "plain_en": "Average daily traded value, used to estimate whether your order size would move the price.",
+      "why_en": "A real cost model needs it; v1 does not have one yet."
+    }
   ]
 }
