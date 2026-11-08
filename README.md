@@ -119,8 +119,11 @@ python referee/profile_check.py \
 ## 测试
 
 ```bash
-python -m unittest discover -s tests -v     # 126 个用例
+python -m unittest discover -s tests -v     # 128 个用例
 ```
+
+测试**只需要 pandas / numpy**：`yfinance`、`akshare`、`requests` 都在函数内部延迟导入，
+所以没装数据源也能跑测试（`tests/test_import_hygiene.py` 会守住这条）。
 
 覆盖：市场与代码匹配（防止 A 股代码被当成美股）、代码归一化（002541.SZ → 002541）、
 报告五章齐全与禁词为零、脏数据识别、随机游走不得被判出结构、前端 JS 语法等。
