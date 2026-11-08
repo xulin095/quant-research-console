@@ -74,15 +74,27 @@ def main(argv=None):
             continue
         rows[lb] = r
         lo = r["ic_ci"][0] if r["ic_ci"] else float("nan")
+        hi = r["ic_ci"][2] if r["ic_ci"] else float("nan")
+        # 显著必须双向报：只标"显著为正"会把反向有效（A股 常见的短期反转）藏起来，
+        # 那是信息，不是噪声。
+        flag = "正*" if lo > 0 else ("负*" if hi < 0 else "-")
         print(f"{lb:>6}{r['ic_mean']*100:>10.2f}{r['ic_t']:>8.2f}{lo*100:>12.2f}"
-              f"{('是' if lo > 0 else '-') :>6}{r['periods']:>7}")
+              f"{flag:>6}{r['periods']:>7}")
 
     if not rows:
         print("没有可用回看期")
         return 1
-    sig = [lb for lb, r in rows.items() if r["ic_ci"] and r["ic_ci"][0] > 0]
-    print(f"\n{len(rows)} 个回看期里，IC 显著为正的有 {len(sig)} 个"
-          f"（{'成片，像真信号' if len(sig) >= 4 else '零散，更像噪声'}）")
+    pos = [lb for lb, r in rows.items() if r["ic_ci"] and r["ic_ci"][0] > 0]
+    neg = [lb for lb, r in rows.items() if r["ic_ci"] and r["ic_ci"][2] < 0]
+    print(f"\n{len(rows)} 个回看期里：显著为正（动量）{len(pos)} 个，"
+          f"显著为负（反转）{len(neg)} 个")
+    if neg and not pos:
+        print("  ⚠ 方向与假设相反：这批数据更像『短期反转』而不是『动量』。")
+        print("    反转要作为一个**新假设**重新预注册再验一次，不能拿这次的结果当结论。")
+    elif pos and len(pos) >= 4:
+        print("  成片为正，像真信号（仍需留出段确认）")
+    else:
+        print("  正负都不成片，更像噪声")
 
     # ---- 第二步：多重检验
     print("\n=== 第二步：多重检验（N = 回看期个数）===")
