@@ -19,7 +19,7 @@ r"""量化研究台 —— 后端 API（标准库，零依赖）。
     GET  /api/registry         账本
     GET  /api/status           数据状态
     GET  /api/cache            缓存文件清单
-    GET  /api/md?name=xxx.md   读取报告原文（白名单）
+    GET  /api/profile?symbol=X 单标的结构画像（描述统计）\n    GET  /api/md?name=xxx.md   读取报告原文（白名单）
     POST /api/upload           上传自备 CSV（校验并落成标准表）\n    POST /api/run {id}         跑卡
     GET  /api/job/{job}        轮询任务
 
@@ -365,6 +365,20 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/", "/index.html"):
             f = STATIC / "index.html"
             return self._send(200, f.read_text(encoding="utf-8"), "text/html; charset=utf-8")
+        if path == "/api/profile":
+            sym = (parse_qs(u.query).get("symbol") or [""])[0].strip().upper()
+            if not sym:
+                return self._send(400, json.dumps({"error": "缺少 symbol"}, ensure_ascii=False))
+            try:
+                from tools.profile import profile as _prof
+                from tools.validate import find_cached, read_csv
+                p = find_cached(ROOT / "data_cache", sym)
+                if p is None:
+                    return self._send(404, json.dumps(
+                        {"error": f"数据里没有 {sym}，先上传或拉取"}, ensure_ascii=False))
+                return self._send(200, json.dumps(_prof(read_csv(p)), ensure_ascii=False))
+            except (OSError, ValueError) as e:
+                return self._send(500, json.dumps({"error": str(e)}, ensure_ascii=False))
         if path == "/api/md":
             name = (parse_qs(u.query).get("name") or [""])[0]
             try:

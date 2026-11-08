@@ -218,6 +218,15 @@ select.w{width:auto;min-width:220px}
     <p class="sub">本地缓存与诚实宇宙。覆盖率＝拿到的样本 / 申请的样本，缺口就是残余偏差。</p>
     <div class="grid g4" id="dataStats"></div>
     <div class="box" style="margin-top:14px">
+      <h3>结构画像（描述统计，不是预测）</h3>
+      <div class="flex">
+        <input id="p-symbol" placeholder="输入代码，如 AAPL / 600519" style="max-width:280px">
+        <button class="act" id="btnProfile">分析结构</button>
+        <span class="hint" style="margin:0">看这只票历史上更像趋势型还是均值回归型</span>
+      </div>
+      <div id="profResult" style="margin-top:14px"></div>
+    </div>
+    <div class="box" style="margin-top:14px">
       <h3>上传自己的数据</h3>
       <div id="drop" style="border:1.5px dashed var(--line);border-radius:10px;
         padding:26px;text-align:center;color:var(--dim);cursor:pointer;
@@ -587,6 +596,36 @@ function loadData(){
   });
 }
 
+/* ---------- 结构画像 ---------- */
+function loadProfile(sym){
+  if(!sym){alert('先填代码');return;}
+  el('profResult').innerHTML='<span class="loading">计算中…</span>';
+  api('/api/profile?symbol='+encodeURIComponent(sym)).then(function(r){
+    if(r.error){el('profResult').innerHTML='<span class="badge err">'+esc(r.error)+'</span>';return;}
+    if(r.ok===false){el('profResult').innerHTML='<span class="badge err">'+esc(r.reason)+'</span>';return;}
+    el('profResult').innerHTML =
+      '<div class="flex" style="margin-bottom:10px">'+
+        '<span class="badge '+(r.structure==='趋势型'?'pass':'err')+'">'+esc(r.structure)+'</span>'+
+        '<span class="muted">'+esc(sym)+' · '+r.rows+' 行 / '+r.years+' 年 · '+
+        esc(r.first)+' → '+esc(r.last)+'</span></div>'+
+      '<div class="nums">'+
+        [['年化收益',(r.annual_return*100).toFixed(2)+'%'],
+         ['年化波动',(r.annual_vol*100).toFixed(2)+'%'],
+         ['最大回撤',(r.max_drawdown*100).toFixed(2)+'%'],
+         ['lag1 自相关',r.autocorr1],
+         ['VR5',r.vr5],['VR20',r.vr20]]
+        .map(function(x){return '<div class="n"><div class="k">'+x[0]+
+          '</div><div class="v">'+esc(x[1])+'</div></div>';}).join('')+'</div>'+
+      '<div style="margin-top:12px;font-size:13px">'+
+        r.evidence.map(function(w){return '<div>· '+esc(w)+'</div>';}).join('')+'</div>'+
+      '<div style="margin-top:10px;font-size:13px;color:var(--dim)"><b style="color:var(--fg)">提示：</b>'+
+        esc(r.hint)+
+        (r.allowed_directions.length?'<br>可试方向：<span class="mono">'+
+          esc(r.allowed_directions.join(' / '))+'</span>':'')+'</div>'+
+      '<div class="hint" style="color:var(--warn)">⚠ '+esc(r.caveat)+'</div>';
+  });
+}
+el('btnProfile').onclick=function(){loadProfile(el('p-symbol').value.trim());};
 /* ---------- 上传 ---------- */
 var pending = null;
 (function initUpload(){
