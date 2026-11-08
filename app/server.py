@@ -20,7 +20,7 @@ r"""量化研究台 —— 后端 API（标准库，零依赖）。
     GET  /api/status           数据状态
     GET  /api/cache            缓存文件清单
     GET  /api/profile?symbol=X 单标的结构画像（描述统计）\n    GET  /api/profile_all     批量结构画像（120 秒缓存）\n    GET  /api/glossary        术语白话库\n    GET  /api/md?name=xxx.md   读取报告原文（白名单）
-    POST /api/upload           上传自备 CSV（校验并落成标准表）\n    POST /api/run {id}         跑卡
+    POST /api/fetch {symbol}   按代码自动拉数据（美股走代理/A股绕过）\n    POST /api/upload           上传自备 CSV（校验并落成标准表）\n    POST /api/run {id}         跑卡
     GET  /api/job/{job}        轮询任务
 
 启动
@@ -317,6 +317,150 @@ def start_run(card_id):
 
 
 def _run(job, card_id):
+    """跑一张卡 —— 进程内调用 tools.audit，不起子进程（原因同 fetch_symbol）。"""
+    import contextlib
+    import io
+
+    buf = io.StringIO()
+    try:
+        import os as _os
+        _os.chdir(str(ROOT))
+        from tools import audit as AUD
+        with contextlib.redirect_stdout(buf):
+            AUD.main([str(CARDS / f"{card_id}.json")])
+        JOBS[job]["status"] = "done"
+        reg = read_registry(limit=1)
+        if reg["entries"]:
+            JOBS[job]["verdict"] = reg["entries"][0].get("verdict")
+            JOBS[job]["metrics"] = reg["entries"][0].get("metrics", {})
+    except Exception as e:
+        JOBS[job]["status"] = "error"
+        buf.write(f"\n运行出错：{type(e).__name__}: {e}")
+    finally:
+        JOBS[job]["output"] = buf.getvalue()
+
+# ---------------------------------------------------------------- 数据接入
+STD_COLS = ["date", "open", "high", "low", "close", "volume"]
+CN_MAP = {"日期": "date", "时间": "date", "开盘": "open", "最高": "high", "最低": "low",
+          "收盘": "close", "成交量": "volume", "成交额": "amount", "代码": "symbol"}
+MIN_ROWS = 60
+
+
+def _norm_header(h):
+    h = h.strip().strip('"').lower()
+    return CN_MAP.get(h, h)
+
+
+def ingest_csv(text, market, symbol, start=None, end=None):
+    """把用户上传的 CSV 变成项目标准表，并校验。
+
+    校验项（不满足就明确拒绝，不静默修补）：
+        · 必需列齐全（支持中文列名：日期/开盘/最高/最低/收盘/成交量）
+        · 日期可解析；重复日期去重并计数；乱序自动排序
+        · 价格必须为正（前复权长历史会出现负价，这是本项目踩过的坑）
+        · 至少 60 个交易日
+    返回 (ok, 信息字典)
+    """
+    import csv as _csv
+    import io
+    from datetime import datetime
+
+    if not market or not symbol:
+        return False, {"error": "必须填写 market 与 symbol"}
+    market = market.strip().lower()
+    symbol = symbol.strip().upper()
+    if market not in ("us", "cn", "crypto"):
+        return False, {"error": "market 只能是 us / cn / crypto"}
+
+    reader = _csv.reader(io.StringIO(text))
+    rows = list(reader)
+    if len(rows) < 2:
+        return False, {"error": "文件内容为空"}
+
+    header = [_norm_header(c) for c in rows[0]]
+    missing = [c for c in STD_COLS if c not in header]
+    if missing:
+        return False, {"error": "缺少列：" + "、".join(missing) +
+                                "（表头是：" + "、".join(rows[0]) + "）"}
+    idx = {c: header.index(c) for c in STD_COLS}
+
+    good, dropped_bad_price, seen, dup = [], 0, set(), 0
+    for r in rows[1:]:
+        if not r or len(r) <= max(idx.values()):
+            continue
+        try:
+            d = r[idx["date"]].strip()[:10]
+            datetime.strptime(d, "%Y-%m-%d")
+            o, h, l, c = (float(r[idx[k]]) for k in ("open", "high", "low", "close"))
+            v = float(r[idx["volume"]] or 0)
+        except (ValueError, IndexError):
+            continue
+        if min(o, h, l, c) <= 0:
+            dropped_bad_price += 1
+            continue
+        if d in seen:
+            dup += 1
+            continue
+        seen.add(d)
+        good.append((d, o, h, l, c, v))
+
+    if len(good) < MIN_ROWS:
+        return False, {"error": f"有效数据只有 {len(good)} 行，少于 {MIN_ROWS} 行",
+                       "dropped_bad_price": dropped_bad_price}
+
+    good.sort(key=lambda x: x[0])
+    d0, d1 = good[0][0], good[-1][0]
+    fname = f"{market}_{symbol}_{d0}_{d1}.csv"
+    path = ROOT / "data_cache" / fname
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lines = ["date,open,high,low,close,volume,symbol,market"]
+    for d, o, h, l, c, v in good:
+        lines.append(f"{d},{o},{h},{l},{c},{v},{symbol},{market}")
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+    return True, {"file": fname, "rows": len(good), "first": d0, "last": d1,
+                  "symbol": symbol, "market": market,
+                  "dedup": dup, "dropped_bad_price": dropped_bad_price,
+                  "hint": "已可被 tools.validate / cross_section / audit 直接使用"}
+
+# ---------------------------------------------------------------- 写操作
+def save_card(card):
+    missing = [k for k in REQUIRED if not card.get(k)]
+    if missing:
+        raise ValueError("缺少字段：" + "、".join(missing))
+    cid = str(card["id"]).strip()
+    if not cid.replace("-", "").replace("_", "").isalnum():
+        raise ValueError("id 只能包含字母、数字、- 和 _")
+    if card["kind"] not in ("cross_section", "time_series"):
+        raise ValueError("kind 只能是 cross_section 或 time_series")
+    if card.get("kind") == "cross_section":
+        lb = int(card.get("lookback", 0))
+        if not 1 <= lb <= 12:
+            raise ValueError("lookback 必须在 1–12")
+        if card.get("direction") not in ("reversal", "momentum"):
+            raise ValueError("direction 只能是 reversal 或 momentum")
+    CARDS.mkdir(parents=True, exist_ok=True)
+    p = CARDS / f"{cid}.json"
+    if p.exists():
+        old = read_json(p, {})
+        frozen = ("lookback", "direction", "holdout")
+        changed = [k for k in frozen if k in old and str(old[k]) != str(card.get(k))]
+        if changed:
+            raise ValueError("这张卡已经跑过了，参数冻结：" + "、".join(changed) +
+                             "。要试新参数请用新的 id（旧卡留在账本里）。")
+    p.write_text(json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8")
+    return {"saved": p.name}
+
+
+def start_run(card_id):
+    job = uuid.uuid4().hex[:8]
+    JOBS[job] = {"status": "running", "output": "", "started": time.time(),
+                 "id": card_id, "verdict": None}
+    threading.Thread(target=_run, args=(job, card_id), daemon=True).start()
+    return job
+
+
+def _run(job, card_id):
     path = CARDS / f"{card_id}.json"
     try:
         p = subprocess.run([sys.executable, "-m", "tools.audit", str(path)],
@@ -333,6 +477,81 @@ def _run(job, card_id):
     except OSError as e:
         JOBS[job].update(status="error", output=f"启动失败：{e}")
 
+
+# ---------------------------------------------------------------- 按代码拉数据
+SYM_RE = __import__("re").compile(r"^[A-Za-z0-9._-]{1,20}$")
+
+
+def check_fetch_args(market, symbol, start, end):
+    """校验拉取参数。返回错误信息或 None。"""
+    from datetime import datetime
+    if market not in ("us", "cn", "crypto"):
+        return "market 只能是 us / cn / crypto"
+    if not SYM_RE.match(symbol or ""):
+        return "代码格式不对（只能是字母、数字、. - _，长度 1–20）"
+    for label, v in (("开始日期", start), ("结束日期", end)):
+        try:
+            datetime.strptime(v, "%Y-%m-%d")
+        except (TypeError, ValueError):
+            return f"{label}格式必须是 YYYY-MM-DD"
+    if start >= end:
+        return "开始日期必须早于结束日期"
+    return None
+
+
+def build_fetch_args(market, symbol, start, end):
+    """拼出调用批量拉取器的命令。单独抽出来是为了可测。"""
+    return [sys.executable, "-m", "tools.fetch_basket",
+            "--market", market, "--symbols", symbol,
+            "--start", start, "--end", end, "--sleep", "0"]
+
+
+def fetch_symbol(symbol, market, start, end, proxy=""):
+    """拉一只票的数据并落缓存 —— **进程内直接调用**，不起子进程。
+
+    为什么不起子进程：受限环境下子进程的管道 stdio 会被拒绝，表现为
+    连接被意外关闭（我实测踩到过）。进程内调用没有这个问题，还快一点。
+    """
+    symbol = (symbol or "").strip().upper()
+    err = check_fetch_args(market, symbol, start, end)
+    if err:
+        return {"ok": False, "error": err}
+
+    import os as _os
+    saved = {k: _os.environ.get(k) for k in
+             ("HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy", "NO_PROXY", "no_proxy")}
+
+    def restore():
+        for k, v in saved.items():
+            if v is None:
+                _os.environ.pop(k, None)
+            else:
+                _os.environ[k] = v
+
+    try:
+        for k in ("HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy", "NO_PROXY", "no_proxy"):
+            _os.environ.pop(k, None)
+        if market in ("us", "crypto"):
+            p = proxy or _os.environ.get("QUANT_PROXY", "") or "http://127.0.0.1:7897"
+            _os.environ["HTTPS_PROXY"] = p
+            _os.environ["HTTP_PROXY"] = p
+        else:
+            _os.environ["NO_PROXY"] = "*"
+            _os.environ["no_proxy"] = "*"
+
+        from data.registry import get_fetcher
+        df = get_fetcher(market).get_history(symbol, start, end)
+        if df is None or len(df) < 60:
+            return {"ok": False, "error": f"只拿到 {0 if df is None else len(df)} 行，不足 60 行"}
+        path = ROOT / "data_cache" / f"{market}_{symbol}_{start}_{end}.csv"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        df.to_csv(path, index=False, encoding="utf-8")
+        return {"ok": True, "file": path.name, "rows": len(df),
+                "first": str(df["date"].iloc[0]), "last": str(df["date"].iloc[-1])}
+    except Exception as e:                      # 网络/接口/解析，统一成一行中文
+        return {"ok": False, "error": f"{type(e).__name__}: {str(e)[:200]}"}
+    finally:
+        restore()
 
 # ---------------------------------------------------------------- HTTP
 ROUTES_GET = {
@@ -425,6 +644,13 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path == "/api/cards":
                 return self._send(200, json.dumps(save_card(payload), ensure_ascii=False))
+            if path == "/api/fetch":
+                r = fetch_symbol(payload.get("symbol", ""), payload.get("market", "us"),
+                                 payload.get("start", "2010-01-01"),
+                                 payload.get("end", "2025-12-31"),
+                                 payload.get("proxy", ""))
+                return self._send(200 if r.get("ok") else 400,
+                                  json.dumps(r, ensure_ascii=False))
             if path == "/api/upload":
                 ok, info = ingest_csv(payload.get("content", ""), payload.get("market", ""),
                                       payload.get("symbol", ""))

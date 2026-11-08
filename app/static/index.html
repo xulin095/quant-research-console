@@ -146,6 +146,31 @@ select.w{width:auto;min-width:220px}
     <p class="sub">研究员 → 架构师 → 开发者 → 质检员。每棒的产物都是真实文件，体量为实测。</p>
     <div class="grid g2" id="plRoles"></div>
     <div class="box" style="margin-top:14px">
+      <h3>① 按代码拉数据（不用自己找文件）</h3>
+      <div class="grid g3">
+        <div><label>市场</label><select id="f-market">
+          <option value="us">us 美股（需要代理）</option>
+          <option value="cn">cn A 股（直连）</option>
+          <option value="crypto">crypto 加密（需要代理）</option></select></div>
+        <div><label>代码</label><input id="f-symbol" placeholder="例如 AAPL / 600519 / BTCUSDT"></div>
+        <div><label>起止日期</label>
+          <div class="flex"><input id="f-start" value="2010-01-01" style="max-width:130px">
+          <span class="muted">→</span>
+          <input id="f-end" value="2025-12-31" style="max-width:130px"></div></div>
+      </div>
+      <label>代理（只在美股/加密时需要；本机默认 127.0.0.1:7897）</label>
+      <input id="f-proxy" value="http://127.0.0.1:7897" style="max-width:320px">
+      <div style="margin-top:14px"><button class="act" id="btnFetch">拉取数据</button>
+        <span class="hint" style="margin-left:10px" id="fetchHint">拉完会自动做结构画像</span></div>
+      <div id="fetchResult" style="margin-top:12px"></div>
+      <div class="hint">
+        美股：yfinance 直连会被限流，必须走代理；A 股：akshare 直连，但要求绕过系统代理（代码已处理）。
+        加密：本机被墙，大概率失败。已退市的票免费数据拿不到 —— 这是幸存者偏差的来源。
+      </div>
+    </div>
+
+    <div class="box" style="margin-top:14px">
+
       <h3>为什么这样分工</h3>
       <div class="hint" style="font-size:13px;color:var(--dim)">
         关键不是「谁更强」，而是<b style="color:var(--fg)">让下游看不到上游的借口</b>：
@@ -699,6 +724,32 @@ function loadProfileAll(){
 }
 el('btnProfileAll').onclick=loadProfileAll;
 
+/* ---------- 按代码拉取 ---------- */
+function doFetch(){
+  var sym = el('f-symbol').value.trim().toUpperCase();
+  if(!sym){ el('fetchResult').innerHTML='<span class="hint">先填代码。</span>'; el('f-symbol').focus(); return; }
+  var body = {market:el('f-market').value, symbol:sym,
+              start:el('f-start').value, end:el('f-end').value,
+              proxy:el('f-proxy').value.trim()};
+  el('fetchResult').innerHTML='<span class="loading">拉取中…（美股走代理，通常 3–10 秒）</span>';
+  el('btnFetch').disabled = true;
+  api('/api/fetch',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body)}).then(function(r){
+    el('btnFetch').disabled = false;
+    if(!r.ok){
+      el('fetchResult').innerHTML='<div style="color:var(--fail);font-size:13px"><b>拉取失败</b><br>'+
+        esc(r.error||'未知原因')+(r.output?'<pre style="margin-top:8px">'+esc(r.output)+'</pre>':'')+'</div>';
+      return;
+    }
+    el('fetchResult').innerHTML='<div style="font-size:13px"><span class="badge pass">已入库</span> '+
+      '<span class="mono">'+esc(r.file)+'</span> <span class="muted">'+r.rows+' 个交易日</span></div>';
+    loadData();
+    el('p-symbol').value = sym;
+    loadProfile(sym);
+    el('fetchHint').textContent = '完成，已自动画出结构画像';
+  });
+}
+el('btnFetch').onclick = doFetch;
 /* ---------- 上传 ---------- */
 var pending = null;
 (function initUpload(){
