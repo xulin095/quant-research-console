@@ -507,21 +507,22 @@ def _run(job, card_id):
 SYM_RE = __import__("re").compile(r"^[A-Za-z0-9._-]{1,20}$")
 
 
-def normalize_symbol(symbol, market):
-    """把用户能敲出来的各种写法，改成数据源认的写法。
+def normalize_symbol(symbol, market=None):
+    """把各种写法统一成数据源认的写法。
 
-    支持：600519 / 600519.SH / SH600519 / sh600519 / 002541.SZ / SZ002541
-    美股只做大写，保留点号（BRK.B 是合法代码）。
+    支持：600519 / 600519.SH / SH600519 / sh600519 / 002541.SZ / 603345.SH
+    美股只做大写并保留点号（BRK.B 是合法代码）。
+
+    注意：**不管有没有指定市场**，只要看起来是 A 股写法就归一化成 6 位数字。
+    否则「市场选自动」时 603345.SH 会找不到 cn_603345_*.csv。
     """
     import re as _re
     s = (symbol or "").strip().upper()
-    if market == "cn":
-        s = s.split(".")[0]
-        m = _re.match(r"^(SH|SZ|BJ)?(\d{6})$", s)
-        if m:
-            return m.group(2)
+    core = s.split(".")[0]                       # 去掉 .SH / .SZ
+    m = _re.match(r"^(SH|SZ|BJ)?(\d{6})$", core)
+    if m:
+        return m.group(2)
     return s
-
 
 CN_SUFFIXES = (".SZ", ".SH", ".SS", ".BJ")
 
@@ -685,7 +686,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, json.dumps({"files": list_reports()}, ensure_ascii=False))
         if path == "/api/profile":
             mk = (parse_qs(u.query).get("market") or [""])[0].strip().lower() or None
-            sym = (parse_qs(u.query).get("symbol") or [""])[0].strip().upper()
+            sym = normalize_symbol((parse_qs(u.query).get("symbol") or [""])[0])
             if not sym:
                 return self._send(400, json.dumps({"error": "缺少 symbol"}, ensure_ascii=False))
             try:
