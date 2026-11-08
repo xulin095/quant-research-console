@@ -102,3 +102,33 @@ Not more indicators. In order of expected value:
 python -m tools.eval_live        # fetch six real tickers, profile, report
 python -m tools.eval_accuracy    # stability + system checks over the whole cache
 ```
+
+## 6. Second experiment: does requiring persistence help? (No.)
+
+**Hypothesis.** If a single-window verdict is unreliable, demand that the structure also shows up
+in the second half of the same window before reporting it. A cheap, in-sample robustness filter.
+
+**Result.** It made the out-of-sample persistence *worse*:
+
+| Variant | Tickers claiming structure | Kept the same verdict out of sample |
+| --- | --- | --- |
+| No filter | 25 | 2 (8.0%) |
+| With in-sample persistence filter | 14 | **0 (0.0%)** |
+
+Overall agreement "improved" from 72.5% to 85.3%, but only because the filter suppressed structure
+claims almost entirely (93 of 109 tickers ended up "no structure -> no structure"). That is not
+accuracy, that is silence.
+
+**Why it fails.** The filter selects windows where the structure was strong *towards the end of the
+first period*. Since the underlying signal does not persist, what it actually selects is the peak
+of a noise burst - selection bias that makes the out-of-sample outcome worse, not better.
+
+**Decision.** The filter was reverted. `tools/profile.py` still computes and exposes the
+persistence evidence (`persistence`, `structure_raw`) but does not downgrade the verdict with it,
+and now returns `structure_is_signal: false` for every ticker: no single-name structural verdict in
+this project has demonstrated cross-period predictive power.
+
+**What this implies.** The structural profile is a *description of one stretch of history*, useful
+for deciding which direction to write a hypothesis card for, and for nothing else. Any claim that it
+predicts the next period would have to be demonstrated on out-of-sample data first - which is
+exactly what `cards/` + `tools/audit.py` exist to do.

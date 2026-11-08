@@ -32,6 +32,7 @@ for f in files:
     split_result.append({
         "file": f.name,
         "first": a["structure"], "second": b["structure"],
+        "first_raw": a.get("structure_raw"), "second_raw": b.get("structure_raw"),
         "z1": a["vr20_z"], "z2": b["vr20_z"],
     })
 
@@ -59,6 +60,13 @@ print(f"  判定一致率: {same}/{n} = {same/n*100:.1f}%")
 print(f"  其中「判出了结构」的: {len(strong)} 只，一致 {strong_same} 只 = "
       f"{(strong_same/len(strong)*100 if strong else 0):.1f}%")
 print(f"  前后段 z 值相关: {zcorr:+.3f}" if zcorr is not None else "  z 相关: 样本不足")
+
+raw_strong = [r for r in split_result if r["first_raw"] == r["second_raw"]
+              and r["first_raw"] not in ("无明显结构", None)]
+raw_same = len(raw_strong)
+raw_claimed = sum(1 for r in split_result if r["first_raw"] not in ("无明显结构", None))
+print(f"  对照（未加持续性过滤）: 同一结构 {raw_same}/{raw_claimed} = "
+      f"{(raw_same/raw_claimed*100 if raw_claimed else 0):.1f}%")
 print("  混淆矩阵（前段 → 后段）:")
 cm = Counter((r["first"], r["second"]) for r in split_result)
 for (a_, b_), c in cm.most_common():

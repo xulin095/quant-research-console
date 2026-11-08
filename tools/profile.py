@@ -105,6 +105,45 @@ def vr_permutation(rets, q=20, boot=120, seed=7):
     return obs, (obs - m) / sd
 
 
+PERSIST_MIN = 100          # 每半段至少这么多收益点才有资格判
+
+def classify_rets(rets):
+    """Return (structure, z, autocorr) for one window of returns."""
+    if len(rets) < MIN_ROWS - 1:
+        return None
+    ac1 = autocorr(rets, 1)
+    _, z = vr_permutation(rets, 20)
+    ac_se = 1 / math.sqrt(len(rets))
+    ac_thr = 2 * ac_se
+    if z is not None and ac1 is not None and z > 2 and ac1 > ac_thr:
+        return ("趋势型", z, ac1)
+    if z is not None and ac1 is not None and z < -2 and ac1 < -ac_thr:
+        return ("均值回归型", z, ac1)
+    return ("无明显结构", z, ac1)
+
+
+def persists(rets, structure):
+    """Does the claimed structure also hold in the second half of this window?
+
+    Why: measuring on one stretch of history finds whichever structure that stretch
+    happened to have. Measured on 109 tickers, only 8% of single-window "structure"
+    verdicts survived into the next period. Requiring the structure to show up twice
+    inside the same window is a cheap robustness filter.
+    """
+    if structure == "无明显结构":
+        return {"checked": False, "reason": "no structure claimed"}
+    half = len(rets) // 2
+    a, b = rets[:half], rets[half:]
+    if len(a) < PERSIST_MIN or len(b) < PERSIST_MIN:
+        return {"checked": False, "reason": "window too short to split"}
+    second = classify_rets(b)
+    label2 = second[0] if second else "无明显结构"
+    first = classify_rets(a)
+    label1 = first[0] if first else "无明显结构"
+    return {"checked": True, "first_half": label1, "second_half": label2,
+            "kept": label2 == structure}
+
+
 def profile(rows):
     """输入标准表行，返回描述统计 + 一句「往哪个方向提假设」的提示。"""
     if len(rows) < MIN_ROWS:
@@ -235,8 +274,17 @@ def profile(rows):
     mu = clean(mu, 8)
     sd = clean(sd, 8)
     big = clean(big)
+    # ---- 持续性检查（只做记录，不做降级）
+    # 实测结论：窗口内的持续性无法预测下一段历史（加过滤后 14 只判出结构的标的，
+    # 后段保持 0 只；不加过滤是 2/25）。所以这里保留描述性判定，只把证据摆出来，
+    # 由报告和 UI 明确标注「这是描述，不是信号」。
+    structure_raw = struct
+    persistence = persists(rets, struct)
+
     return {
         "ok": True,
+        "structure_raw": structure_raw, "persistence": persistence,
+        "structure_is_signal": False,   # 没有任何单票结构判定被证明有跨期预测力
         "rows": len(rows), "ret_days": n, "years": round(years, 2),
         "first": rows[0]["date"], "last": rows[-1]["date"],
         "annual_return": ann_ret, "annual_vol": ann_vol,
