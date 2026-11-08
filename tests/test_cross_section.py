@@ -104,5 +104,46 @@ class TestCosts(unittest.TestCase):
         self.assertLess(paid["strat_cagr"], free["strat_cagr"], "成本没起作用")
 
 
+class TestAuditHelpers(unittest.TestCase):
+    """审计器的三个小零件：p 值、Bonferroni、留出段切分。"""
+
+    def test_one_sided_p_monotone(self):
+        from tools import cs_audit as A
+        self.assertLess(A.one_sided_p(2.5), A.one_sided_p(1.0))
+        self.assertAlmostEqual(A.one_sided_p(0.0), 0.5, places=6)
+        self.assertEqual(A.one_sided_p(None), 1.0)
+
+    def test_bonferroni_grows_with_tests(self):
+        from tools import cs_audit as A
+        p = 0.01
+        self.assertLess(A.bonferroni(p, 1), A.bonferroni(p, 12))
+        self.assertLessEqual(A.bonferroni(p, 1000), 1.0)
+        self.assertAlmostEqual(A.bonferroni(p, 1), p, places=12)
+
+    def test_split_by_date(self):
+        from tools import cs_audit as A
+        obs = [{"date": "2020-01-01"}, {"date": "2023-01-01"}, {"date": "2024-01-01"}]
+        tr, ho = A.split_obs(obs, "2023-01-01")
+        self.assertEqual([o["date"] for o in tr], ["2020-01-01"])
+        self.assertEqual(len(ho), 2)
+
+    def test_panel_uses_union_not_intersection(self):
+        """成分股用并集：某个标的晚上市，不该把整段历史砍掉。"""
+        import tempfile
+        from pathlib import Path
+        from tools import cross_section as C
+        with tempfile.TemporaryDirectory() as td:
+            d = Path(td)
+            for name, start in (("a", 0), ("b", 200)):
+                lines = ["date,open,close"]
+                for i in range(start, 400):
+                    dt = "2020-%02d-%02d" % (i // 28 + 1, i % 28 + 1)
+                    lines.append(f"{dt},10,{10 + i * 0.01}")
+                (d / f"us_S{name.upper()}_2010-01-01_2025-12-31.csv").write_text(
+                    "\n".join(lines), encoding="utf-8")
+            # 只有 2 只票，低于 MIN_SYMBOLS，应当直接报错而不是静默返回空
+            with self.assertRaises(SystemExit):
+                C.load_panel(["SA", "SB", "SC"], td)
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

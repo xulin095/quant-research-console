@@ -55,11 +55,17 @@ def load_panel(symbols, csv_dir):
     if len(series) < MIN_SYMBOLS:
         raise SystemExit(f"只有 {len(series)} 只票有数据，截面至少需要 {MIN_SYMBOLS} 只")
 
-    common = set.intersection(*(set(v) for v in series.values()))
-    dates = sorted(common)
+    # 用「并集」而不是「交集」：交集会因为某个标的晚上市（如 KHC 2015 年分拆）
+    # 把整段历史砍掉。并集允许成分股随时间变化，这才是接近 point-in-time 的做法。
+    all_dates = set()
+    for v in series.values():
+        all_dates.update(v)
+    dates = sorted(all_dates)
+    panel = {d: {s: v[d] for s, v in series.items() if d in v} for d in dates}
     if len(dates) < 300:
-        raise SystemExit(f"共同交易日只有 {len(dates)} 天，不足以做截面检验")
-    panel = {d: {s: series[s][d] for s in series} for d in dates}
+        raise SystemExit(f"可用交易日只有 {len(dates)} 天，不足以做截面检验")
+    # 至少要有 MIN_SYMBOLS 只票同时有价格的日子才算数
+    dates = [d for d in dates if len(panel[d]) >= MIN_SYMBOLS]
     return dates, panel, list(series)
 
 
@@ -157,7 +163,7 @@ def build_observations(panel, dates, lookback_months=6):
     return obs
 
 
-def evaluate(obs, top_n=3, cost=DEFAULT_COST):
+def evaluate(obs, top_n=3, cost=DEFAULT_COST, boot=2000):
     ics, strat, bench, turns = [], [], [], []
     prev_hold = set()
     for o in obs:
@@ -180,10 +186,10 @@ def evaluate(obs, top_n=3, cost=DEFAULT_COST):
         return {"ok": False, "reason": f"可用期数只有 {len(strat)}，不足 12 期"}
 
     ic_m, ic_t = mean_t(ics)
-    ic_ci = bootstrap_ci(ics)
+    ic_ci = bootstrap_ci(ics, n_boot=boot)
     ex = [a - b for a, b in zip(strat, bench)]
     ex_m, ex_t = mean_t(ex)
-    ex_ci = bootstrap_ci(ex)
+    ex_ci = bootstrap_ci(ex, n_boot=boot)
 
     def cagr(monthly):
         cum = 1.0
