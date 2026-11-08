@@ -1,3 +1,5 @@
+import os
+
 CAPITAL = 100000
 FAST = 5
 SLOW = 20
@@ -10,3 +12,4 @@ RF = 0.02
 TRADING_DAYS = 252
 MIN_ROWS = 60
 VOL_N = 20
+PROXY = os.environ.get("QUANT_PROXY", "")  # 空串 = 不用代理

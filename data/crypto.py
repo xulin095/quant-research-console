@@ -4,6 +4,7 @@ import sys
 import pandas as pd
 import requests
 
+from config import PROXY
 from data.base import DataError, DataFetcher
 
 
@@ -15,11 +16,14 @@ class CryptoFetcher(DataFetcher):
             cursor = int(datetime.fromisoformat(start).replace(tzinfo=timezone.utc).timestamp() * 1000)
             stop = int(datetime.fromisoformat(end).replace(tzinfo=timezone.utc).timestamp() * 1000)
             records = []
+            session = requests.Session()
+            session.trust_env = False
+            proxies = {"http": PROXY, "https": PROXY} if PROXY else None
             while cursor < stop:
-                response = requests.get("https://api.binance.com/api/v3/klines",
+                response = session.get("https://api.binance.com/api/v3/klines",
                                         params={"symbol": symbol.upper(), "interval": "1d",
                                                 "startTime": cursor, "endTime": stop - 1,
-                                                "limit": 1000}, timeout=15)
+                                                "limit": 1000}, timeout=15, proxies=proxies)
                 response.raise_for_status()
                 batch = response.json()
                 if not isinstance(batch, list) or not batch:
@@ -29,6 +33,7 @@ class CryptoFetcher(DataFetcher):
                 if next_cursor <= cursor:
                     raise DataError("加密行情分页没有前进")
                 cursor = next_cursor
+            session.close()
             frame = pd.DataFrame(records)
             if frame.empty:
                 raise DataError("加密数据源没有返回数据")

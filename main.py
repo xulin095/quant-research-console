@@ -1,3 +1,8 @@
+import os
+
+os.environ.setdefault("NO_PROXY", "*")
+os.environ.setdefault("no_proxy", "*")
+
 import argparse
 import sys
 from datetime import date

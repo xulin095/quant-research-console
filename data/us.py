@@ -1,10 +1,32 @@
 import pandas as pd
 import yfinance as yf
 import io
+import os
 import sys
 from contextlib import redirect_stderr
 
+from config import PROXY
 from data.base import DataError, DataFetcher
+
+
+def download_with_proxy(symbol, start, end):
+    names = ("HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY", "no_proxy")
+    original = {name: os.environ.get(name) for name in names}
+    if PROXY:
+        os.environ["HTTPS_PROXY"] = PROXY
+        os.environ["HTTP_PROXY"] = PROXY
+        os.environ.pop("NO_PROXY", None)
+        os.environ.pop("no_proxy", None)
+    try:
+        with redirect_stderr(io.StringIO()):
+            return yf.download(symbol.upper(), start=start, end=end,
+                               auto_adjust=True, progress=False, threads=False)
+    finally:
+        for name, value in original.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
 
 
 class USFetcher(DataFetcher):
@@ -13,9 +35,7 @@ class USFetcher(DataFetcher):
     def get_history(self, symbol: str, start: str, end: str) -> pd.DataFrame:
         try:
             # 第三方库可能直接向 stderr 打英文限流信息；入口统一输出一行中文。
-            with redirect_stderr(io.StringIO()):
-                raw = yf.download(symbol.upper(), start=start, end=end,
-                                  auto_adjust=True, progress=False, threads=False)
+            raw = download_with_proxy(symbol, start, end)
             if raw.empty:
                 raise DataError("美股数据源没有返回数据，可能遇到 Yahoo 限流")
             if isinstance(raw.columns, pd.MultiIndex):

@@ -15,6 +15,7 @@ class CNFetcher(DataFetcher):
                                      end_date=end.replace("-", ""), adjust="qfq")
             raw = raw.rename(columns={"日期": "date", "开盘": "open", "最高": "high",
                                       "最低": "low", "收盘": "close", "成交量": "volume"})
+            raw["date"] = pd.to_datetime(raw["date"]).dt.strftime("%Y-%m-%d")
             # AKShare 的成交量为手；标准表统一记股。
             raw["volume"] = pd.to_numeric(raw["volume"], errors="coerce") * 100
             raw = raw[raw["date"] < end]
