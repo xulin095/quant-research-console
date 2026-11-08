@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>量化研究控制台</title>
+<style>
+  :root{--bg:#0f1115;--card:#171a21;--line:#262b36;--fg:#e6e9ef;--dim:#8b93a3;
+        --pass:#25c26e;--fail:#e5484d;--warn:#f5a524;--acc:#4a90e2}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);
+       font:14px/1.6 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+  header{padding:16px 22px;border-bottom:1px solid var(--line);display:flex;
+         align-items:center;gap:14px;flex-wrap:wrap}
+  h1{font-size:16px;margin:0;font-weight:600}
+  .disc{color:var(--warn);font-size:12px;border:1px solid rgba(245,165,36,.35);
+        padding:2px 8px;border-radius:20px}
+  .chips{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+  .chip{background:var(--card);border:1px solid var(--line);border-radius:6px;
+        padding:4px 10px;font-size:12px;color:var(--dim)}
+  .chip b{color:var(--fg)}
+  nav{display:flex;gap:4px;padding:10px 22px 0}
+  nav button{background:none;border:none;color:var(--dim);padding:8px 14px;
+             cursor:pointer;font-size:14px;border-bottom:2px solid transparent}
+  nav button.on{color:var(--fg);border-bottom-color:var(--acc)}
+  main{padding:18px 22px 60px;max-width:1180px}
+  .panel{display:none}.panel.on{display:block}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:10px;
+       padding:16px;margin-bottom:14px}
+  .box h2{font-size:13px;margin:0 0 12px;color:var(--dim);font-weight:600;
+          letter-spacing:.04em;text-transform:uppercase}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);
+        vertical-align:top}
+  th{color:var(--dim);font-weight:500;font-size:12px}
+  tr:last-child td{border-bottom:none}
+  .badge{display:inline-block;padding:1px 8px;border-radius:4px;font-size:12px;
+         font-weight:600}
+  .badge.pass{background:rgba(37,194,110,.15);color:var(--pass)}
+  .badge.fail{background:rgba(229,72,77,.15);color:var(--fail)}
+  .badge.err{background:rgba(245,165,36,.15);color:var(--warn)}
+  .mono{font-family:ui-monospace,Consolas,monospace;font-size:12px}
+  .muted{color:var(--dim);font-size:12px}
+  input,select,textarea{background:#0b0d11;border:1px solid var(--line);
+        color:var(--fg);border-radius:6px;padding:7px 9px;font-size:13px;width:100%}
+  label{display:block;font-size:12px;color:var(--dim);margin:10px 0 4px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+  button.act{background:var(--acc);color:#fff;border:none;border-radius:6px;
+        padding:8px 16px;cursor:pointer;font-size:13px}
+  button.act:disabled{opacity:.45;cursor:not-allowed}
+  button.ghost{background:none;border:1px solid var(--line);color:var(--fg);
+        border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px}
+  pre{background:#0b0d11;border:1px solid var(--line);border-radius:8px;
+      padding:12px;overflow:auto;font-size:12px;max-height:340px;margin:0}
+  .verdict{font-size:22px;font-weight:700;margin:6px 0}
+  .nums{display:flex;gap:22px;flex-wrap:wrap;margin-top:8px}
+  .num{min-width:110px}
+  .num .k{font-size:11px;color:var(--dim)}
+  .num .v{font-size:18px;font-family:ui-monospace,Consolas,monospace}
+  .hint{color:var(--dim);font-size:12px;margin-top:10px;line-height:1.7}
+</style>
+</head>
+<body>
+<header>
+  <h1>量化研究控制台</h1>
+  <span class="disc">研究工具，不构成投资建议</span>
+  <div class="chips" id="chips"></div>
+</header>
+
+<nav>
+  <button class="on" data-tab="cards">卡片</button>
+  <button data-tab="ledger">账本</button>
+  <button data-tab="data">数据</button>
+</nav>
+
+<main>
+  <section class="panel on" id="p-cards">
+    <div class="box">
+      <h2>已有假设卡</h2>
+      <table id="cardTable"><thead><tr>
+        <th>编号</th><th>类型</th><th>方向</th><th>回看</th><th>选股数</th>
+        <th>机制</th><th></th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <div class="box" id="runBox" style="display:none">
+      <h2>运行结果</h2>
+      <div id="runVerdict" class="verdict"></div>
+      <div class="nums" id="runNums"></div>
+      <details style="margin-top:12px"><summary class="muted">原始输出</summary>
+        <pre id="runOut"></pre></details>
+    </div>
+
+    <div class="box">
+      <h2>新建卡</h2>
+      <div class="grid">
+        <div><label>编号</label><input id="f-id" placeholder="HK-003"></div>
+        <div><label>类型</label><select id="f-kind">
+          <option value="cross_section">cross_section（截面）</option>
+          <option value="time_series">time_series（单标的时序）</option>
+        </select></div>
+        <div><label>方向</label><select id="f-dir">
+          <option value="reversal">reversal（买跌得多）</option>
+          <option value="momentum">momentum（买涨得多）</option>
+        </select></div>
+        <div><label>回看（月）</label><input id="f-lb" type="number" value="5" min="1" max="12"></div>
+        <div><label>选股数</label><input id="f-top" type="number" value="3" min="1" max="20"></div>
+        <div><label>成本（单边）</label><input id="f-cost" value="0.0008"></div>
+      </div>
+      <label>机制（必须能说出「谁在亏钱」）</label>
+      <textarea id="f-mech" rows="2" placeholder="散户追涨导致短期定价过度，随后回吐"></textarea>
+      <label>预测（一句话）</label>
+      <textarea id="f-claims" rows="2" placeholder="过去 5 个月跌幅最大的 3 只，未来 1 个月跑赢等权"></textarea>
+      <div class="hint">
+        参数一经运行就冻结：<b>不通过就淘汰，不许回来改 lookback 重试</b>。
+        要试新参数请用新的编号新建一张卡。
+      </div>
+      <div style="margin-top:12px"><button class="act" id="btnSave">保存卡</button></div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-ledger">
+    <div class="box">
+      <h2>账本（追加式，失败也记）</h2>
+      <table id="ledgerTable"><thead><tr>
+        <th>时间</th><th>卡号</th><th>判定</th><th>IC CI 下界</th>
+        <th>超额 t</th><th>此前试过</th></tr></thead><tbody></tbody></table>
+      <div class="hint" id="ledgerHint"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-data">
+    <div class="box">
+      <h2>本地数据</h2>
+      <table id="dataTable"><tbody></tbody></table>
+      <div class="hint">
+        留出段（holdout）是唯一的干净考卷，<b>不要改</b>。
+        覆盖率＝实际拿到的样本 / 申请的样本；缺口部分就是残余偏差。
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+var state = {cards:[], running:null};
+
+function el(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function api(path, opt){
+  return fetch(path, opt).then(function(r){return r.json();});
+}
+function badge(v){
+  var k = v==='PASS'?'pass':(v==='FAIL'?'fail':'err');
+  var t = v==='PASS'?'通过':(v==='FAIL'?'不通过':(v||'—'));
+  return '<span class="badge '+k+'">'+esc(t)+'</span>';
+}
+function fmt(x, d){
+  if(x===null||x===undefined) return '—';
+  if(typeof x !== 'number') return esc(x);
+  return x.toFixed(d===undefined?4:d);
+}
+
+document.querySelectorAll('nav button').forEach(function(b){
+  b.onclick = function(){
+    document.querySelectorAll('nav button').forEach(function(x){x.classList.remove('on');});
+    document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('on');});
+    b.classList.add('on');
+    el('p-'+b.dataset.tab).classList.add('on');
+    if(b.dataset.tab==='ledger') loadLedger();
+    if(b.dataset.tab==='data') loadData();
+  };
+});
+
+function loadStatus(){
+  api('/api/status').then(function(d){
+    el('chips').innerHTML =
+      '<span class="chip">缓存 <b>'+d.cache_files+'</b> 只</span>'+
+      '<span class="chip">宇宙 <b>'+d.universe_size+'</b> 只'+
+        (d.coverage?' / 覆盖 <b>'+Math.round(d.coverage*100)+'%</b>':'')+'</span>';
+  });
+  api('/api/registry').then(function(d){
+    el('chips').innerHTML += '<span class="chip">账本 <b>'+d.total+'</b> 次 / 通过 <b>'+
+      d.passed+'</b></span>';
+  });
+}
+
+function loadCards(){
+  api('/api/cards').then(function(d){
+    state.cards = d.cards;
+    var tb = el('cardTable').querySelector('tbody');
+    tb.innerHTML = d.cards.map(function(c){
+      return '<tr><td class="mono">'+esc(c.id)+'</td>'+
+        '<td class="muted">'+esc(c.kind||'')+'</td>'+
+        '<td class="muted">'+esc(c.direction||'—')+'</td>'+
+        '<td class="mono">'+esc(c.lookback||'—')+'</td>'+
+        '<td class="mono">'+esc(c.top_n||'—')+'</td>'+
+        '<td class="muted">'+esc(c.mechanism||'')+'</td>'+
+        '<td><button class="ghost" onclick="runCard(\''+esc(c.id)+'\')">运行</button></td></tr>';
+    }).join('') || '<tr><td colspan="7" class="muted">还没有卡</td></tr>';
+  });
+}
+
+function runCard(id){
+  if(!confirm('运行「'+id+'」？\n\n参数会被冻结并写入账本。跑一张可能要几分钟。')) return;
+  el('runBox').style.display='block';
+  el('runVerdict').innerHTML='<span class="muted">运行中…（截面卡通常 1–5 分钟）</span>';
+  el('runNums').innerHTML=''; el('runOut').textContent='';
+  api('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:id})}).then(function(r){
+      if(r.error){el('runVerdict').innerHTML='<span class="badge err">'+esc(r.error)+'</span>';return;}
+      poll(r.job);
+    });
+}
+
+function poll(job){
+  api('/api/job/'+job).then(function(j){
+    if(j.status==='running'){
+      el('runVerdict').innerHTML='<span class="muted">运行中… '+Math.round((Date.now()/1000))%60+'s</span>';
+      setTimeout(function(){poll(job);},2500); return;
+    }
+    el('runOut').textContent = j.output || '';
+    el('runVerdict').innerHTML = badge(j.verdict);
+    var m = j.metrics || {};
+    var keys = ['ic','ic_t','ic_ci_low','ic_ci_high','strat_cagr','bench_cagr','excess_t'];
+    el('runNums').innerHTML = keys.filter(function(k){return m[k]!==undefined;})
+      .map(function(k){return '<div class="num"><div class="k">'+k+'</div><div class="v">'+
+        fmt(m[k])+'</div></div>';}).join('');
+    loadStatus(); loadCards();
+  });
+}
+
+function saveCard(){
+  var card = {
+    id: el('f-id').value.trim(),
+    kind: el('f-kind').value,
+    direction: el('f-dir').value,
+    lookback: parseInt(el('f-lb').value,10),
+    top_n: parseInt(el('f-top').value,10),
+    cost: parseFloat(el('f-cost').value) || 0.0008,
+    holdout: '2021-01-01',
+    universe: 'universe.json',
+    mechanism: el('f-mech').value.trim(),
+    claims: el('f-claims').value.trim()
+  };
+  api('/api/cards',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(card)}).then(function(r){
+      if(r.error){alert(r.error);return;}
+      el('f-id').value=''; el('f-mech').value=''; el('f-claims').value='';
+      loadCards();
+    });
+}
+
+function loadLedger(){
+  api('/api/registry').then(function(d){
+    var tb = el('ledgerTable').querySelector('tbody');
+    tb.innerHTML = d.entries.map(function(e){
+      var m = e.metrics || {};
+      return '<tr><td class="mono muted">'+esc((e.ts||'').replace('T',' '))+'</td>'+
+        '<td class="mono">'+esc(e.id)+'</td><td>'+badge(e.verdict)+'</td>'+
+        '<td class="mono">'+fmt(m.ic_ci_low)+'</td>'+
+        '<td class="mono">'+fmt(m.excess_t,2)+'</td>'+
+        '<td class="mono">'+esc(e.n_tests_before)+'</td></tr>';
+    }).join('') || '<tr><td colspan="6" class="muted">账本是空的</td></tr>';
+    el('ledgerHint').innerHTML = '累计 <b>'+d.total+'</b> 次检验，通过 <b>'+d.passed+
+      '</b> 次（通过率 '+(d.pass_rate*100).toFixed(1)+'%）。' +
+      (d.pass_rate>0.2 ? ' <span style="color:var(--warn)">通过率偏高，检查卡片是否写得太松。</span>':'');
+  });
+}
+
+function loadData(){
+  api('/api/status').then(function(d){
+    el('dataTable').querySelector('tbody').innerHTML =
+      '<tr><th>本地缓存标的</th><td class="mono">'+d.cache_files+' 个 CSV</td></tr>'+
+      '<tr><th>诚实宇宙</th><td class="mono">'+d.universe_size+' 只</td></tr>'+
+      '<tr><th>覆盖率</th><td class="mono">'+(d.coverage?Math.round(d.coverage*100)+'%':'—')+'</td></tr>'+
+      '<tr><th>其中退市票</th><td class="mono">'+(d.delisted_ok==null?'—':d.delisted_ok)+'</td></tr>'+
+      '<tr><th>留出段起点</th><td class="mono">'+esc(d.held_out_from)+'</td></tr>';
+  });
+}
+
+el('btnSave').onclick = saveCard;
+loadStatus(); loadCards();
+</script>
+</body>
+</html>
