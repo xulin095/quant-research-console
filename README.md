@@ -44,6 +44,49 @@ Most "quant" projects fail for the same reasons, and none of them are bugs in th
 This project turns those traps into **mechanical checks**. Every claim either passes or fails.
 There is no "mostly passes".
 
+## What this does, and what it does not
+
+**It does:**
+
+- Check whether a price series is usable at all: non-positive prices, duplicate dates, gaps.
+  118 of 118 cached files pass this gate.
+- Describe what a stock did over a given stretch of history -- trending, mean-reverting, or
+  neither -- and show the evidence strength behind that description.
+- Test a hypothesis mechanically: does the excess return over buy-and-hold have a 95% confidence
+  interval whose lower bound is above zero, on out-of-sample data?
+- Recompute its own output with a separate implementation and tell you when the two disagree.
+- Keep an append-only log, failures included, so "how many times did I try" is never hidden.
+
+**It does not:**
+
+- Predict prices. There is no forecast anywhere in this repository.
+- Promise that a described structure will continue. Measured: of 25 tickers showing a structure in
+  the first 70% of their history, **2 (8%)** kept it in the last 30%.
+- Tell you what to buy, how much, or when.
+- Produce "95% accuracy". Anything advertising that is selling something.
+
+**Measured, not asserted** (see [docs/evaluation.md](docs/evaluation.md)):
+
+| Question | Result |
+| --- | --- |
+| Data integrity across 118 cached files | 100% |
+| Same data profiled twice | identical numbers |
+| Generated reports confirmed by an independent recomputation | 6 / 6 |
+| A single-name structure persisting out of sample | **8%** (2 of 25) |
+| The same, after adding an in-sample persistence filter | **0%** (0 of 14) -- reverted |
+
+**Three honest ways to use it:**
+
+1. **Before believing an idea, check the data.** Most "the data says X" claims die at the hygiene
+   gate: negative prices from forward adjustment, duplicate rows, gaps.
+2. **Kill a bad idea cheaply.** Write the card, run the audit, accept the verdict. A failed card
+   costs an hour; a failed position costs money.
+3. **Keep the log.** Six months from now "I already tried that, here is the card" is worth more
+   than a folder of charts.
+
+**One dishonest way:** treating the structural verdict as a trading signal. It describes one
+stretch of history, not the next one.
+
 ## How a verdict is decided
 
 | What it compares | Not "did it make money", but **how much it beat buy-and-hold** |
