@@ -1,0 +1,13 @@
+{
+  "id": "HK-001",
+  "kind": "cross_section",
+  "market": "cn",
+  "direction": "reversal",
+  "lookback": 5,
+  "top_n": 3,
+  "holdout": "2021-01-01",
+  "cost": 0.0008,
+  "universe": "universe.json",
+  "mechanism": "散户追涨导致短期定价过度，随后回吐（反转而非动量）",
+  "claims": "A股 过去 5 个月跌幅最大的 3 只，未来 1 个月跑赢等权"
+}

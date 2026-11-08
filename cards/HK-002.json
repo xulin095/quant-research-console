@@ -1,0 +1,13 @@
+{
+  "id": "HK-002",
+  "kind": "cross_section",
+  "market": "cn",
+  "direction": "momentum",
+  "lookback": 5,
+  "top_n": 3,
+  "holdout": "2021-01-01",
+  "cost": 0.0008,
+  "universe": "universe.json",
+  "mechanism": "信息扩散缓慢，赢家继续赢（动量）",
+  "claims": "A股 过去 5 个月涨幅最大的 3 只，未来 1 个月跑赢等权"
+}
