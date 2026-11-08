@@ -325,10 +325,22 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
+    import webbrowser
     CARDS.mkdir(parents=True, exist_ok=True)
-    srv = ThreadingHTTPServer((HOST, PORT), Handler)
-    print(f"研究台已启动：http://{HOST}:{PORT}")
-    print("Ctrl+C 停止")
+    url = f"http://{HOST}:{PORT}"
+    try:
+        srv = ThreadingHTTPServer((HOST, PORT), Handler)
+    except OSError as e:
+        print(f"端口 {PORT} 被占用（可能研究台已经开着了）：{e}")
+        print(f"直接打开浏览器访问 {url} 即可；若要重启，先关掉已有的那个窗口。")
+        webbrowser.open(url)
+        input("按回车关闭本窗口…")
+        return
+
+    print(f"研究台已启动：{url}")
+    print("浏览器会自动打开。这个窗口就是服务本体，关掉它即停止。")
+    if "--open" in sys.argv:
+        threading.Timer(1.0, lambda: webbrowser.open(url)).start()
     try:
         srv.serve_forever()
     except KeyboardInterrupt:
