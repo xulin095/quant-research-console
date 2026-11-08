@@ -523,6 +523,37 @@ def normalize_symbol(symbol, market):
     return s
 
 
+CN_SUFFIXES = (".SZ", ".SH", ".SS", ".BJ")
+
+
+def market_mismatch(market, symbol):
+    """判断「这个代码是不是这个市场的」。
+
+    为什么必须有这条：Yahoo 上深市代码写 `002541.SZ`，所以把 A 股代码
+    丢给「美股」拉取，yfinance 会照单全收，于是 A 股数据被打上 us 标签、
+    报告里写着「市场 us」—— 数据是假的，标签也是假的。
+
+    注意：这里对「带后缀」的写法宽容（cn 接受 002541.SZ / SH600519），
+    因为用户从券商软件复制出来就是这种格式。
+    """
+    import re as _re
+    s = (symbol or "").strip().upper()
+    if not s:
+        return "代码不能为空"
+    core = s.split(".")[0]                      # 去掉 .SZ / .SH
+    is_cn_code = bool(_re.match(r"^(SH|SZ|BJ)?(\d{6})$", core))
+
+    if market == "us":
+        if s.endswith(CN_SUFFIXES) or is_cn_code:
+            return f"{s} 是 A 股代码，市场应选 cn"
+    elif market == "cn":
+        if not is_cn_code:
+            return f"{s} 不是 A 股代码（应为 6 位数字，可带 .SZ/.SH）"
+    elif market == "crypto":
+        if is_cn_code or s.endswith(CN_SUFFIXES):
+            return f"{s} 不像加密交易对（一般形如 BTCUSDT）"
+    return None
+
 def check_fetch_args(market, symbol, start, end):
     """校验拉取参数。返回错误信息或 None。"""
     from datetime import datetime
@@ -530,6 +561,9 @@ def check_fetch_args(market, symbol, start, end):
         return "market 只能是 us / cn / crypto"
     if not SYM_RE.match(symbol or ""):
         return "代码格式不对（只能是字母、数字、. - _，长度 1–20）"
+    mm = market_mismatch(market, symbol)
+    if mm:
+        return mm
     for label, v in (("开始日期", start), ("结束日期", end)):
         try:
             datetime.strptime(v, "%Y-%m-%d")
@@ -587,6 +621,12 @@ def fetch_symbol(symbol, market, start, end, proxy=""):
         path = ROOT / "data_cache" / f"{market}_{symbol}_{start}_{end}.csv"
         path.parent.mkdir(parents=True, exist_ok=True)
         df.to_csv(path, index=False, encoding="utf-8")
+        # 双保险：落盘后再核对数据自己声明的市场（防止数据源张冠李戴）
+        if "market" in df.columns:
+            got = str(df["market"].iloc[0]).lower()
+            if got and got != market:
+                path.unlink(missing_ok=True)
+                return {"ok": False, "error": f"数据源返回的是 {got} 市场数据，与请求的 {market} 不符，已丢弃"}
         return {"ok": True, "file": path.name, "rows": len(df),
                 "first": str(df["date"].iloc[0]), "last": str(df["date"].iloc[-1])}
     except Exception as e:                      # 网络/接口/解析，统一成一行中文
